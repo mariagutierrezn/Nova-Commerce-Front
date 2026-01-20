@@ -9,6 +9,10 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
 }
 
 .form-label {
@@ -63,6 +67,163 @@ select.form-input {
   font-size: 1.2rem;
   animation: spin 1s linear infinite;
   pointer-events: none;
+}
+
+// Image upload styles
+.image-upload-container {
+  background: #f8fafc;
+  border: 2px dashed #cbd5e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.upload-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #cbd5e0;
+    background: #f8fafc;
+  }
+
+  &.active {
+    border-color: #667eea;
+    background: #667eea;
+    color: white;
+  }
+}
+
+.upload-content {
+  margin-bottom: 1rem;
+}
+
+.hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.image-preview {
+  position: relative;
+  margin-top: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 300px;
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+  }
+
+  .btn-remove-image {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 0.5rem 0.75rem;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(239, 68, 68, 1);
+      transform: scale(1.05);
+    }
+  }
+}
+
+// Discount toggle styles
+.discount-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .slider {
+      background-color: #667eea;
+    }
+
+    &:checked + .slider:before {
+      transform: translateX(24px);
+    }
+  }
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e0;
+  transition: 0.3s;
+  border-radius: 26px;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+}
+
+.toggle-label {
+  font-weight: 600;
+  color: #334155;
+}
+
+.discount-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    padding-right: 40px;
+  }
+
+  .input-suffix {
+    position: absolute;
+    right: 15px;
+    font-weight: 600;
+    color: #667eea;
+    font-size: 1.1rem;
+  }
 }
 
 @keyframes spin {

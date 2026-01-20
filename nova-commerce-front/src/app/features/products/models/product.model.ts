@@ -13,6 +13,8 @@ export interface Product {
   productType?: 'PHYSICAL' | 'DIGITAL';
   createdAt?: string;
   updatedAt?: string;
+  hasDiscount?: boolean;
+  discountPercentage?: number;
 }
 
 /**

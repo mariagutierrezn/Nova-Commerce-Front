@@ -16,11 +16,11 @@ export class AdminOrderService {
     return this.http.get<AdminOrder[]>(`${this.resource}`, { params });
   }
 
-  getById(id: number): Observable<AdminOrder> {
+  getById(id: string): Observable<AdminOrder> {
     return this.http.get<AdminOrder>(`${this.resource}/${id}`);
   }
 
-  updateStatus(id: number, status: AdminOrderStatus): Observable<AdminOrder> {
+  updateStatus(id: string, status: AdminOrderStatus): Observable<AdminOrder> {
     return this.http.patch<AdminOrder>(`${this.resource}/${id}/status`, { status });
   }
 }

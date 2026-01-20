@@ -20,7 +20,7 @@
           </a>
         </li>
         <li class="nc-header__nav-item">
-          <a routerLink="/products" class="nc-header__nav-link">Ofertas</a>
+          <a [routerLink]="['/products']" [queryParams]="{discount: 'true'}" class="nc-header__nav-link">Ofertas</a>
         </li>
         <li class="nc-header__nav-item" *ngIf="userFacade.isAuthenticated$ | async">
           <a routerLink="/orders" routerLinkActive="nc-header__nav-link--active" class="nc-header__nav-link">

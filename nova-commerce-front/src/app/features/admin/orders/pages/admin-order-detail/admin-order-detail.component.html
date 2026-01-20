@@ -4,16 +4,16 @@
     <p><strong>ID:</strong> {{ order.id }}</p>
     <p><strong>Cliente ID:</strong> {{ order.customerId }}</p>
     <p><strong>Estado:</strong> {{ order.status }}</p>
-    <p><strong>Total antes de descuento:</strong> {{ order.totalBeforeDiscount | number:'1.2-2' }}</p>
-    <p><strong>Descuento:</strong> {{ order.discountTotal | number:'1.2-2' }}</p>
-    <p><strong>Total final:</strong> {{ order.totalAfterDiscount | number:'1.2-2' }}</p>
+    <p><strong>Total antes de descuento:</strong> {{ order.totalBeforeDiscount | currency:'USD':'symbol':'1.0-0' }}</p>
+    <p><strong>Descuento:</strong> {{ order.discountTotal | currency:'USD':'symbol':'1.0-0' }}</p>
+    <p><strong>Total final:</strong> {{ order.totalAfterDiscount | currency:'USD':'symbol':'1.0-0' }}</p>
     <p><strong>Creado:</strong> {{ order.createdAt | date:'short' }}</p>
     <p><strong>Actualizado:</strong> {{ order.updatedAt | date:'short' }}</p>
 
     <h3>Items</h3>
     <ul>
       <li *ngFor="let it of order.items">
-        {{ it.productName }} × {{ it.quantity }} — {{ it.subTotal | number:'1.2-2' }}
+        {{ it.productName }} × {{ it.quantity }} — {{ it.subTotal | currency:'USD':'symbol':'1.0-0' }}
       </li>
     </ul>
 

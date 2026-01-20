@@ -2,17 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  totalOrders: number;
-  totalSpent: number;
-  status: 'active' | 'inactive';
-  registeredAt: Date;
-}
+import { CustomerService, Customer } from '../../customer.service';
 
 @Component({
   selector: 'app-admin-customer-list',
@@ -67,25 +57,25 @@ interface Customer {
               <tr *ngFor="let customer of filteredCustomers">
                 <td>
                   <div class="customer-info">
-                    <div class="customer-avatar">{{ customer.name.charAt(0) }}</div>
-                    <span class="customer-name">{{ customer.name }}</span>
+                    <div class="customer-avatar">{{ getCustomerInitial(customer) }}</div>
+                    <span class="customer-name">{{ getCustomerName(customer) }}</span>
                   </div>
                 </td>
                 <td>
                   <div class="customer-contact">
                     <div>{{ customer.email }}</div>
-                    <div class="text-muted">{{ customer.phone }}</div>
+                    <div class="text-muted">{{ customer.phone || 'N/A' }}</div>
                   </div>
                 </td>
-                <td>{{ customer.totalOrders }}</td>
-                <td>\${{ customer.totalSpent | number: '1.2-2' }}</td>
+                <td>{{ customer.totalOrders || 0 }}</td>
+                <td>{{ customer.totalSpent || 0 | number: '1.2-2' }}</td>
                 <td>
                   <span class="badge" [class.badge--success]="customer.status === 'active'" 
                         [class.badge--danger]="customer.status === 'inactive'">
                     {{ customer.status === 'active' ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
-                <td>{{ customer.registeredAt | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ customer.createdAt | date: 'dd/MM/yyyy' }}</td>
                 <td>
                   <div class="admin-table__actions">
                     <button class="btn-icon" [routerLink]="['/admin/customers', customer.id]" title="Ver detalles">
@@ -278,63 +268,95 @@ interface Customer {
   `]
 })
 export class AdminCustomerListComponent implements OnInit {
+  private customerService = inject(CustomerService);
+
   customers: Customer[] = [];
   filteredCustomers: Customer[] = [];
   searchTerm = '';
   statusFilter = '';
+  loading = false;
+  error: string | null = null;
 
   ngOnInit(): void {
     this.loadCustomers();
   }
 
   loadCustomers(): void {
-    // Mock data - en producción, esto vendría del backend
-    this.customers = [
-      {
-        id: '1',
-        name: 'Juan Pérez',
-        email: 'juan.perez@example.com',
-        phone: '+57 300 123 4567',
-        totalOrders: 12,
-        totalSpent: 1250000,
-        status: 'active',
-        registeredAt: new Date('2023-05-15')
+    this.loading = true;
+    this.error = null;
+    
+    this.customerService.getAllCustomers().subscribe({
+      next: (customers) => {
+        console.log('📦 Clientes cargados:', customers);
+        this.customers = customers;
+        this.filteredCustomers = [...this.customers];
+        this.loading = false;
       },
-      {
-        id: '2',
-        name: 'María García',
-        email: 'maria.garcia@example.com',
-        phone: '+57 310 987 6543',
-        totalOrders: 8,
-        totalSpent: 890000,
-        status: 'active',
-        registeredAt: new Date('2023-07-22')
-      },
-      {
-        id: '3',
-        name: 'Carlos López',
-        email: 'carlos.lopez@example.com',
-        phone: '+57 320 456 7890',
-        totalOrders: 3,
-        totalSpent: 340000,
-        status: 'inactive',
-        registeredAt: new Date('2024-01-10')
+      error: (err) => {
+        console.error('❌ Error cargando clientes:', err);
+        this.error = 'Error al cargar clientes';
+        this.loading = false;
+        // Mantener array vacío en caso de error
+        this.customers = [];
+        this.filteredCustomers = [];
       }
-    ];
-    this.filteredCustomers = [...this.customers];
+    });
   }
 
   filterCustomers(): void {
     this.filteredCustomers = this.customers.filter(customer => {
-      const matchesSearch = customer.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+      const fullName = this.getCustomerName(customer);
+      const matchesSearch = fullName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
                            customer.email.toLowerCase().includes(this.searchTerm.toLowerCase());
       const matchesStatus = !this.statusFilter || customer.status === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
   }
 
+  getCustomerName(customer: Customer): string {
+    return `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Sin nombre';
+  }
+
+  getCustomerInitial(customer: Customer): string {
+    const name = this.getCustomerName(customer);
+    return name.charAt(0).toUpperCase();
+  }
+
   exportCustomers(): void {
-    console.log('Exportando clientes...');
-    // Implementar lógica de exportación
+    console.log('📤 Exportando clientes...');
+    // Implementar lógica de exportación CSV/Excel
+    const csvContent = this.generateCSV();
+    this.downloadCSV(csvContent, 'clientes.csv');
+  }
+
+  private generateCSV(): string {
+    const headers = ['ID', 'Nombre', 'Email', 'Teléfono', 'Pedidos', 'Total Gastado', 'Estado', 'Fecha Registro'];
+    const rows = this.customers.map(c => [
+      c.id,
+      this.getCustomerName(c),
+      c.email,
+      c.phone || 'N/A',
+      c.totalOrders || 0,
+      c.totalSpent || 0,
+      c.status,
+      c.createdAt
+    ]);
+
+    return [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\n');
+  }
+
+  private downloadCSV(content: string, filename: string): void {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }

@@ -83,19 +83,29 @@ export class ProductListComponent implements OnInit {
   searchTerm: string | null = null;
 
   ngOnInit(): void {
-    // Leer parámetro de búsqueda de la URL
+    // Leer parámetros de la URL (búsqueda y filtros)
     this.route.queryParams.subscribe(params => {
       this.searchTerm = params['search'] || null;
+      const discountFilter = params['discount'];
       
-      // Cargar productos con filtro de búsqueda si existe
+      // Cargar productos con filtros
       const filters: any = {};
+      
       if (this.searchTerm) {
         filters.name = this.searchTerm;
       }
+      
       if (this.selectedCategoryId) {
         filters.categoryId = this.selectedCategoryId;
       }
       
+      // Filtro de ofertas/descuentos
+      if (discountFilter === 'true') {
+        filters.hasDiscount = true;
+        console.log('🏷️ Filtrando productos con descuento');
+      }
+      
+      console.log('🔍 Cargando productos con filtros:', filters);
       this.productFacade.loadProducts(filters);
     });
 

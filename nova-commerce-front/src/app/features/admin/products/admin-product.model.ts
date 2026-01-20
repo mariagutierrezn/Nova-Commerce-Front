@@ -8,6 +8,8 @@ export interface AdminProduct {
   categoryId?: string; // String para coincidir con backend
   stockQuantity: number;
   status: 'ACTIVE' | 'INACTIVE';
+  hasDiscount?: boolean;
+  discountPercentage?: number;
 }
 
 export interface AdminProductInput {
@@ -19,4 +21,6 @@ export interface AdminProductInput {
   categoryId: string; // Requerido por backend (String, no number)
   stockQuantity: number;
   status: 'ACTIVE' | 'INACTIVE'; // Requerido por backend
+  hasDiscount?: boolean;
+  discountPercentage?: number;
 }

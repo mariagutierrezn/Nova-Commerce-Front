@@ -12,8 +12,13 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'products',
+        redirectTo: 'dashboard',
         pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./admin-dashboard.component').then((m) => m.AdminDashboardComponent),
       },
       {
         path: 'products',

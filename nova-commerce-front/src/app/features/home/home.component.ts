@@ -34,6 +34,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
 
+  // SVG inline placeholder como fallback confiable
+  readonly placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect fill="%23f1f5f9" width="400" height="300"/%3E%3Ctext fill="%2394a3b8" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="Arial, sans-serif" font-size="18"%3ESin imagen%3C/text%3E%3C/svg%3E';
+
   // Carousel configuration
   currentSlide = 0;
   carouselSlides = [
@@ -116,10 +119,25 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Obtiene la URL de la imagen del producto, usando placeholder si no existe o es inválida
+   */
+  getProductImageUrl(product: Product): string {
+    // Si no hay imageUrl o es una cadena vacía o solo espacios, usar placeholder
+    if (!product.imageUrl || product.imageUrl.trim() === '' || product.imageUrl.includes('placeholder-product.svg')) {
+      return this.placeholderImage;
+    }
+    return product.imageUrl;
+  }
+
+  /**
    * Maneja error de carga de imagen
+   * Usa SVG inline como fallback inmediato
    */
   onImageError(event: any): void {
-    event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em" font-family="sans-serif" font-size="14"%3ESin imagen%3C/text%3E%3C/svg%3E';
+    const target = event.target as HTMLImageElement;
+    if (target && !target.src.includes('data:image')) {
+      target.src = this.placeholderImage;
+    }
   }
 
   /**

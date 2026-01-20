@@ -106,10 +106,34 @@
     margin-top: auto;
   }
 
+  &__pricing {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
   &__price {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-primary, #1976d2);
+
+    &--original {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #999;
+      text-decoration: line-through;
+    }
+  }
+
+  &__discount-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 4px;
+    margin-left: 8px;
   }
 
   &__stock {

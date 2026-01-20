@@ -56,7 +56,7 @@
       </div>
 
       <!-- Grid de productos -->
-      <div *ngIf="!loading && !error && products.length > 0" class="nc-product-grid">
+      <div *ngIf="!loading && !error" class="nc-product-grid">
         <div *ngFor="let product of products.slice(0, 4)" class="nc-product-card">
           <!-- Discount tag -->
           <span class="discount-tag">-30%</span>
@@ -64,7 +64,7 @@
           <!-- Imagen del producto -->
           <div class="nc-product-card__image">
             <img
-              [src]="product.imageUrl || 'assets/placeholder-product.svg'"
+              [src]="getProductImageUrl(product)"
               [alt]="product.name"
               (error)="onImageError($event)">
           </div>
@@ -124,7 +124,7 @@
           <!-- Imagen del producto -->
           <div class="nc-product-card__image">
             <img
-              [src]="product.imageUrl || 'assets/placeholder-product.svg'"
+              [src]="getProductImageUrl(product)"
               [alt]="product.name"
               (error)="onImageError($event)">
           </div>

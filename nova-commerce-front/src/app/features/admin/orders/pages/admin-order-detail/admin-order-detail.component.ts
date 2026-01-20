@@ -18,14 +18,12 @@ export class AdminOrderDetailComponent implements OnInit {
   state$ = this.facade.state$;
 
   ngOnInit() {
-    const idParam = this.route.snapshot.paramMap.get('id')!;
-    const id = parseInt(idParam, 10);
+    const id = this.route.snapshot.paramMap.get('id')!;
     this.facade.loadOrderById(id);
   }
 
   updateStatus(status: 'CREATED' | 'PAID' | 'SHIPPED' | 'COMPLETED') {
-    const idParam = this.route.snapshot.paramMap.get('id')!;
-    const id = parseInt(idParam, 10);
+    const id = this.route.snapshot.paramMap.get('id')!;
     this.facade.updateOrderStatus(id, status);
   }
 }

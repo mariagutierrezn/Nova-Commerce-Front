@@ -37,7 +37,7 @@ export class AdminOrderFacade {
     });
   }
 
-  loadOrderById(id: number) {
+  loadOrderById(id: string) {
     this.setState({ loading: true });
     this.service.getById(id).subscribe({
       next: (selectedOrder) => this.setState({ selectedOrder, loading: false }),
@@ -45,7 +45,7 @@ export class AdminOrderFacade {
     });
   }
 
-  updateOrderStatus(id: number, status: AdminOrderStatus) {
+  updateOrderStatus(id: string, status: AdminOrderStatus) {
     this.setState({ loading: true });
     this.service.updateStatus(id, status).subscribe({
       next: (order) => {

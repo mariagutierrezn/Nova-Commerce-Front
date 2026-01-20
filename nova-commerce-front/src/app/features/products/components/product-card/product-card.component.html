@@ -20,7 +20,15 @@
       <p class="product-card__description">{{ product().description }}</p>
 
       <div class="product-card__footer">
-        <span class="product-card__price">\${{ product().price | number: '1.2-2' }}</span>
+        <div class="product-card__pricing">
+          @if (product().hasDiscount && product().discountPercentage) {
+            <span class="product-card__price--original">{{ product().price | currency:'USD':'symbol':'1.0-0' }}</span>
+            <span class="product-card__price">{{ product().price * (1 - (product().discountPercentage || 0) / 100) | currency:'USD':'symbol':'1.0-0' }}</span>
+            <span class="product-card__discount-badge">-{{ product().discountPercentage }}%</span>
+          } @else {
+            <span class="product-card__price">{{ product().price | currency:'USD':'symbol':'1.0-0' }}</span>
+          }
+        </div>
 
         @if (product(); as p) {
           @if (p.stock && p.stock > 0 && p.stock <= 5) {
