@@ -1,95 +1,152 @@
 <div class="nc-home">
-  <!-- Hero Carousel Section -->
-  <div class="nc-home__hero nc-home__hero-carousel">
-    <div class="nc-carousel">
-      <!-- Botón Anterior -->
-      <button class="nc-carousel__nav nc-carousel__nav--prev" (click)="prevSlide()" aria-label="Anterior">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-
-      <div class="nc-carousel__track" [style.transform]="'translateX(-' + currentSlide * 100 + '%)'">
-        <div
-          class="nc-carousel__slide"
-          *ngFor="let slide of carouselSlides; let i = index"
-          [routerLink]="slide.buttonLink || null"
-          [class.clickable]="!!slide.buttonLink"
-          [attr.tabindex]="slide.buttonLink ? 0 : -1"
-          role="link"
-          aria-label="{{ slide.title }}"
-        >
-          <div class="nc-carousel__content">
-            <h2>{{ slide.title }}</h2>
-            <p>{{ slide.description }}</p>
-          </div>
+  <!-- === HERO BANNER CON CARRUSEL === -->
+  <section class="nc-hero">
+    <div class="nc-hero__container">
+      <div class="nc-hero__content">
+        <h1 class="nc-hero__title">¡Bienvenido a NovaCommerce!</h1>
+        <p class="nc-hero__subtitle">Descuentos exclusivos en productos seleccionados.</p>
+        <button class="nc-hero__cta" [routerLink]="['/products']">
+          Explorar Productos
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Imagen decorativa -->
+      <div class="nc-hero__image">
+        <div class="nc-hero__product-card nc-hero__product-card--1">
+          <div class="product-img"></div>
+        </div>
+        <div class="nc-hero__product-card nc-hero__product-card--2">
+          <div class="product-img"></div>
+        </div>
+        <div class="nc-hero__product-card nc-hero__product-card--3">
+          <div class="product-img"></div>
         </div>
       </div>
 
-      <!-- Botón Siguiente -->
-      <button class="nc-carousel__nav nc-carousel__nav--next" (click)="nextSlide()" aria-label="Siguiente">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
-
-      <div class="nc-carousel__indicators">
+      <!-- Indicadores del carrusel -->
+      <div class="nc-hero__indicators">
         <span
-          *ngFor="let slide of carouselSlides; let i = index"
-          class="nc-carousel__indicator"
+          *ngFor="let slide of [0, 1, 2, 3, 4]; let i = index"
+          class="nc-hero__indicator"
           [class.active]="currentSlide === i"
           (click)="goToSlide(i)">
         </span>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Estado de Carga -->
-  <div *ngIf="loading" class="nc-home__loading">
-    <div class="spinner"></div>
-    <p>Cargando productos...</p>
-  </div>
+  <!-- === OFERTAS DESTACADAS === -->
+  <section class="nc-section">
+    <div class="nc-section__container">
+      <h2 class="nc-section__title">Ofertas Destacadas</h2>
+      
+      <!-- Loading -->
+      <div *ngIf="loading" class="nc-section__loading">
+        <div class="spinner"></div>
+        <p>Cargando productos...</p>
+      </div>
 
-  <!-- Estado de Error -->
-  <div *ngIf="error && !loading" class="nc-home__error">
-    <p>{{ error }}</p>
-  </div>
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="nc-section__error">
+        <p>{{ error }}</p>
+      </div>
 
-  <!-- Grilla de Productos -->
-  <div *ngIf="!loading && !error" class="nc-home__products">
-    <h2>Productos Destacados</h2>
-    <div class="nc-home__grid">
-      <div *ngFor="let product of products" class="nc-product-card">
-        <!-- Imagen del Producto -->
+      <!-- Grid de productos -->
+      <div *ngIf="!loading && !error && products.length > 0" class="nc-product-grid">
+        <div *ngFor="let product of products.slice(0, 4)" class="nc-product-card">
+          <!-- Discount tag -->
+          <span class="discount-tag">-30%</span>
+
+          <!-- Imagen del producto -->
           <div class="nc-product-card__image">
-          <img
-            [src]="product.imageUrl || 'assets/placeholder-product.svg'"
-            [alt]="product.name"
-            (error)="onImageError($event)">
-          <span class="nc-product-card__badge nc-product-card__type" [ngClass]="'badge--' + (product.productType?.toLowerCase() || 'physical')">
-            {{ product.productType || 'PHYSICAL' }}
-          </span>
-        </div>
+            <img
+              [src]="product.imageUrl || 'assets/placeholder-product.svg'"
+              [alt]="product.name"
+              (error)="onImageError($event)">
+          </div>
 
-        <div class="nc-product-card__body">
-          <h3 class="nc-product-card__title">{{ product.name }}</h3>
-          <p class="nc-product-card__description">{{ product.description }}</p>
+          <!-- Contenido -->
+          <div class="nc-product-card__content">
+            <h3 class="nc-product-card__title">{{ product.name }}</h3>
+            <p class="nc-product-card__description">{{ product.description }}</p>
 
-          <div class="nc-product-card__footer">
-            <div class="nc-product-card__price">
-              <span class="currency">$</span>
-              <span class="amount">{{ product.price | number: '1.2-2' }}</span>
+            <!-- Precios -->
+            <div class="nc-product-card__pricing">
+              <span class="nc-product-card__old-price">${{ (product.price * 1.4) | number: '1.2-2' }}</span>
+              <span class="nc-product-card__price">${{ product.price | number: '1.2-2' }}</span>
             </div>
-            <button class="nc-product-card__button" [routerLink]="['/products']">
+
+            <!-- Botón -->
+            <button class="nc-product-card__btn" [routerLink]="['/products', product.id]">
               Ver Detalles
             </button>
           </div>
+        </div>
+
+        <!-- Card de placeholder "Sin imagen" -->
+        <div class="nc-product-card nc-product-card--placeholder">
+          <span class="discount-tag">-30%</span>
+          <div class="nc-product-card__image nc-product-card__image--empty">
+            <span>Sin imagen</span>
+          </div>
+          <div class="nc-product-card__content">
+            <h3 class="nc-product-card__title">Producto sin imagen</h3>
+            <p class="nc-product-card__description">Descripción del producto.</p>
+            <div class="nc-product-card__pricing">
+              <span class="nc-product-card__old-price">$30,000.00</span>
+              <span class="nc-product-card__price">$24,000.00</span>
+            </div>
+            <button class="nc-product-card__btn">Ver Detalles</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sin productos -->
+      <div *ngIf="!loading && !error && products.length === 0" class="nc-section__empty">
+        <p>No hay productos disponibles en este momento.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Sin Productos -->
-  <div *ngIf="!loading && !error && products.length === 0" class="nc-home__empty">
-    <p>No hay productos disponibles en este momento.</p>
-  </div>
+  <!-- === DESCUENTOS INTELIGENTES PARA TI === -->
+  <section class="nc-section nc-section--alt">
+    <div class="nc-section__container">
+      <h2 class="nc-section__title">Descuentos Inteligentes para Ti</h2>
+      <p class="nc-section__subtitle">Personalizado sus recomendaciones para Ti</p>
+
+      <!-- Grid de productos -->
+      <div *ngIf="!loading && !error && products.length > 0" class="nc-product-grid">
+        <div *ngFor="let product of products.slice(0, 4)" class="nc-product-card">
+          <!-- Imagen del producto -->
+          <div class="nc-product-card__image">
+            <img
+              [src]="product.imageUrl || 'assets/placeholder-product.svg'"
+              [alt]="product.name"
+              (error)="onImageError($event)">
+          </div>
+
+          <!-- Contenido -->
+          <div class="nc-product-card__content">
+            <h3 class="nc-product-card__title">{{ product.name }}</h3>
+            <p class="nc-product-card__description">{{ product.description }}</p>
+
+            <!-- Precios -->
+            <div class="nc-product-card__pricing">
+              <span class="nc-product-card__old-price">${{ (product.price * 1.3) | number: '1.2-2' }}</span>
+              <span class="nc-product-card__price">${{ product.price | number: '1.2-2' }}</span>
+            </div>
+
+            <!-- Botón -->
+            <button class="nc-product-card__btn" [routerLink]="['/products', product.id]">
+              Ver Detalles
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

@@ -43,58 +43,69 @@ import { RouterLink } from '@angular/router';
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #ffffff;
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border-radius: var(--radius-md, 8px);
+      color: var(--user-text-secondary, #64748b);
       cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       text-decoration: none;
     }
 
     .cart-icon:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: scale(1.1);
+      background: var(--user-bg-secondary, #f8fafc);
+      color: var(--user-text-primary, #1e293b);
+      transform: translateY(-1px);
     }
 
     .cart-icon__svg {
-      width: 28px;
-      height: 28px;
-      stroke-width: 1.5;
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
     }
 
     .cart-icon__badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      top: 4px;
+      right: 4px;
+      background: var(--user-primary, #3b82f6);
+      color: #ffffff;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
+      min-width: 18px;
+      height: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 700;
       line-height: 1;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+      padding: 0 4px;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
       border: 2px solid #ffffff;
     }
 
     .cart-icon__badge--large {
-      font-size: 10px;
-      width: 28px;
-      height: 28px;
+      font-size: 9px;
+      min-width: 20px;
+      height: 20px;
     }
 
     @media (max-width: 768px) {
       .cart-icon {
-        padding: 4px;
+        width: 36px;
+        height: 36px;
       }
 
       .cart-icon__svg {
-        width: 24px;
-        height: 24px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .cart-icon__badge {
+        min-width: 16px;
+        height: 16px;
+        font-size: 9px;
       }
     }
   `,

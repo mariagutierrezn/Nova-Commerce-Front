@@ -1,11 +1,11 @@
 export interface AdminProduct {
-  id: number;
+  id: string; // MongoDB ObjectId como String
   name: string;
   description?: string;
   imageUrl?: string | null;
   price: number;
   productType: string;
-  categoryId?: number;
+  categoryId?: string; // String para coincidir con backend
   stockQuantity: number;
   status: 'ACTIVE' | 'INACTIVE';
 }
@@ -15,8 +15,8 @@ export interface AdminProductInput {
   description?: string;
   imageUrl?: string | null;
   price: number;
-  productType?: string;
-  categoryId?: number;
+  productType: string; // Requerido por backend
+  categoryId: string; // Requerido por backend (String, no number)
   stockQuantity: number;
-  status?: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'INACTIVE'; // Requerido por backend
 }

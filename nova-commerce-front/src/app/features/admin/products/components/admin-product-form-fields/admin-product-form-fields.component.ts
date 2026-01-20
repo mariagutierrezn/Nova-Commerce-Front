@@ -20,7 +20,7 @@ export class AdminProductFormFieldsComponent implements OnInit {
     stockQuantity: 0,
     status: 'ACTIVE',
     productType: 'PHYSICAL',
-    categoryId: undefined
+    categoryId: 'DEFAULT' // Valor por defecto requerido
   };
   @Output() modelChange = new EventEmitter<AdminProductInput>();
   @Output() imageFileChange = new EventEmitter<File | null>();

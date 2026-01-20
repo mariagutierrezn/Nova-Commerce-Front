@@ -63,8 +63,16 @@ export class OrderFacade {
 
     const customerId = this.tokenService.getCustomerId();
 
+    // Validar que customerId no sea null
+    if (!customerId) {
+      this.errorSubject.next('No se pudo obtener el ID del cliente');
+      this.loadingSubject.next(false);
+      console.error('customerId es null o undefined');
+      return;
+    }
+
     const request: CreateOrderRequest = {
-      customerId: customerId ?? undefined,
+      customerId: String(customerId), // Convertir a String como espera el backend
       items,
     };
 

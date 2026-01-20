@@ -24,7 +24,7 @@ export class AdminProductService {
       .pipe(map(response => response.content));
   }
 
-  getById(id: number): Observable<AdminProduct> {
+  getById(id: string): Observable<AdminProduct> {
     return this.http.get<AdminProduct>(`${this.resource}/${id}`);
   }
 
@@ -32,22 +32,22 @@ export class AdminProductService {
     return this.http.post<AdminProduct>(`${this.resource}`, input);
   }
 
-  update(id: number, input: AdminProductInput): Observable<AdminProduct> {
+  update(id: string, input: AdminProductInput): Observable<AdminProduct> {
     return this.http.put<AdminProduct>(`${this.resource}/${id}`, input);
   }
 
-  setActive(id: number, status: 'ACTIVE' | 'INACTIVE'): Observable<AdminProduct> {
+  setActive(id: string, status: 'ACTIVE' | 'INACTIVE'): Observable<AdminProduct> {
     return this.http.put<AdminProduct>(`${this.resource}/${id}`, { status });
   }
 
-  delete(id: number): Observable<void> {
+  delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.resource}/${id}`);
   }
 
   /**
    * Sube una imagen para un producto (form-data -> field 'image')
    */
-  uploadImage(id: number, file: File): Observable<{ imageUrl: string; message?: string }> {
+  uploadImage(id: string, file: File): Observable<{ imageUrl: string; message?: string }> {
     const fd = new FormData();
     fd.append('imageFile', file);
     return this.http.post<{ imageUrl: string; message?: string }>(`${this.resource}/${id}/images`, fd);

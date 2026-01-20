@@ -28,7 +28,7 @@
         class="form-input"
         [disabled]="loadingCategories"
       >
-        <option [value]="undefined">
+        <option value="DEFAULT">
           {{ loadingCategories ? '⏳ Cargando categorías...' : 'Seleccionar categoría' }}
         </option>
         <option *ngFor="let category of categories" [value]="category.id">

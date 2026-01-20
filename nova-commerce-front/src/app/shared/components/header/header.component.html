@@ -1,9 +1,9 @@
 <header class="nc-header">
   <div class="nc-header__container">
-    <!-- Logo -->
+    <!-- Logo Nova -->
     <div class="nc-header__logo">
       <a routerLink="/" class="nc-header__logo-link">
-        <img src="/logo.svg" alt="Nova" class="nc-header__logo-img" />
+        <div class="nc-header__logo-icon">N</div>
         <span class="nc-header__brand">Nova</span>
       </a>
     </div>
@@ -11,18 +11,22 @@
     <!-- Navegación principal -->
     <nav class="nc-header__nav">
       <ul class="nc-header__nav-list">
-        <ng-container *ngIf="userFacade.isAuthenticated$ | async">
-          <li class="nc-header__nav-item">
-            <a routerLink="/products" routerLinkActive="nc-header__nav-link--active" class="nc-header__nav-link">
-              Productos
-            </a>
-          </li>
-          <li class="nc-header__nav-item">
-            <a routerLink="/orders" routerLinkActive="nc-header__nav-link--active" class="nc-header__nav-link">
-              Mis Órdenes
-            </a>
-          </li>
-        </ng-container>
+        <li class="nc-header__nav-item">
+          <a routerLink="/products" routerLinkActive="nc-header__nav-link--active" class="nc-header__nav-link">
+            Productos
+            <svg class="nc-header__dropdown-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+        </li>
+        <li class="nc-header__nav-item">
+          <a routerLink="/products" class="nc-header__nav-link">Ofertas</a>
+        </li>
+        <li class="nc-header__nav-item" *ngIf="userFacade.isAuthenticated$ | async">
+          <a routerLink="/orders" routerLinkActive="nc-header__nav-link--active" class="nc-header__nav-link">
+            Mis Pedidos
+          </a>
+        </li>
         <li class="nc-header__nav-item" *ngIf="userFacade.isAdmin$|async">
           <a routerLink="/admin" routerLinkActive="nc-header__nav-link--active" class="nc-header__nav-link">
             Admin
@@ -31,32 +35,58 @@
       </ul>
     </nav>
 
-    <!-- Área de usuario -->
+    <!-- Área de usuario y acciones -->
     <div class="nc-header__actions">
-      <!-- Carrito (solo si autenticado) -->
-      <app-cart-icon
-        *ngIf="userFacade.isAuthenticated$|async"
-        [itemCount]="(cartItemCount$ | async) ?? 0"
-      ></app-cart-icon>
+      <!-- Buscador -->
+      <div class="nc-header__search" [class.nc-header__search--active]="showSearchInput">
+        <button class="nc-header__icon-btn" aria-label="Buscar" (click)="toggleSearch()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </button>
+        <input 
+          *ngIf="showSearchInput"
+          type="text" 
+          class="nc-header__search-input" 
+          placeholder="Buscar productos..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+          autofocus>
+      </div>
 
-      <!-- Mostrar cuando NO está autenticado -->
-      <a *ngIf="!(userFacade.isAuthenticated$|async)"
-         routerLink="/auth/login"
-         class="nc-header__login-btn">
-        Iniciar Sesión
-      </a>
+      <!-- Usuario autenticado -->
+      <ng-container *ngIf="userFacade.isAuthenticated$|async; else loginButton">
+        <!-- Icono de usuario -->
+        <button class="nc-header__icon-btn" aria-label="Perfil">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </button>
 
-      <!-- Mostrar cuando SÍ está autenticado -->
-      <div *ngIf="userFacade.isAuthenticated$|async" class="nc-header__user">
-        <span class="nc-header__username">{{ userFacade.email$ | async }}</span>
+        <!-- Carrito -->
+        <app-cart-icon
+          class="nc-header__cart"
+          [itemCount]="(cartItemCount$ | async) ?? 0"
+        ></app-cart-icon>
+
+        <!-- Botón logout (oculto en mobile) -->
         <button class="nc-header__logout-btn" type="button" (click)="onLogout()" title="Cerrar Sesión">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
             <polyline points="16 17 21 12 16 7"></polyline>
             <line x1="21" y1="12" x2="9" y2="12"></line>
           </svg>
         </button>
-      </div>
+      </ng-container>
+
+      <!-- Botón login cuando NO está autenticado -->
+      <ng-template #loginButton>
+        <a routerLink="/auth/login" class="nc-header__login-btn">
+          Iniciar Sesión
+        </a>
+      </ng-template>
     </div>
   </div>
 </header>

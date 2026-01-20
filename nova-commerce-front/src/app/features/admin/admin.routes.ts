@@ -60,6 +60,30 @@ export const ADMIN_ROUTES: Routes = [
           },
         ],
       },
+      {
+        path: 'customers',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./customers/pages/admin-customer-list/admin-customer-list.component').then(
+                (m) => m.AdminCustomerListComponent
+              ),
+          },
+        ],
+      },
+      {
+        path: 'discounts',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./discounts/pages/admin-discount-list/admin-discount-list.component').then(
+                (m) => m.AdminDiscountListComponent
+              ),
+          },
+        ],
+      },
     ],
   },
 ];

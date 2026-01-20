@@ -26,7 +26,7 @@ export class AdminProductTableComponent {
     }
   }
 
-  deleteProduct(id: number, name: string) {
+  deleteProduct(id: string, name: string) {
     if (confirm(`¿Estás seguro de que deseas eliminar "${name}"?`)) {
       this.facade.deleteProduct(id);
     }
