@@ -47,4 +47,5 @@ export interface ProductFilters {
   maxPrice?: number;
   page?: number;
   pageSize?: number;
+  hasDiscount?: boolean;
 }

@@ -24,6 +24,17 @@ export const routes: Routes = [
       import('./features/auth/auth.routes').then((m) => m.authRoutes),
   },
 
+  // Rutas de administración (sin layout público)
+  {
+    path: 'admin',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['ADMIN'] },
+    loadChildren: () =>
+      import('./features/admin/admin.routes').then(
+        (m) => m.ADMIN_ROUTES
+      ),
+  },
+
   // Rutas principales con layout
   {
     path: '',
@@ -56,15 +67,6 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/cart/cart.routes').then(
             (m) => m.cartRoutes
-          ),
-      },
-      {
-        path: 'admin',
-        canActivate: [authGuard, roleGuard],
-        data: { roles: ['ADMIN'] },
-        loadChildren: () =>
-          import('./features/admin/admin.routes').then(
-            (m) => m.ADMIN_ROUTES
           ),
       },
     ],

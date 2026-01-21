@@ -27,6 +27,7 @@ import { ProductFacade } from '../../services/product.facade';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ProductSkeletonComponent } from '../../components/product-skeleton/product-skeleton.component';
 import { CategoryFilterComponent } from '../../components/category-filter/category-filter.component';
+import { ProductFilters } from '../../models/product.model';
 
 @Component({
   selector: 'app-product-list',
@@ -89,10 +90,10 @@ export class ProductListComponent implements OnInit {
       const discountFilter = params['discount'];
       
       // Cargar productos con filtros
-      const filters: any = {};
+      const filters: ProductFilters = {};
       
       if (this.searchTerm) {
-        filters.name = this.searchTerm;
+        filters.search = this.searchTerm;
       }
       
       if (this.selectedCategoryId) {
@@ -120,12 +121,12 @@ export class ProductListComponent implements OnInit {
   onCategoryChange(categoryId: string | null): void {
     this.selectedCategoryId = categoryId;
 
-    const filters: any = {};
+    const filters: ProductFilters = {};
     if (categoryId) {
       filters.categoryId = categoryId;
     }
     if (this.searchTerm) {
-      filters.name = this.searchTerm;
+      filters.search = this.searchTerm;
     }
     
     this.productFacade.loadProducts(filters);
@@ -135,9 +136,9 @@ export class ProductListComponent implements OnInit {
    * Recarga los productos (reintentar después de error)
    */
   retry(): void {
-    const filters: any = {};
+    const filters: ProductFilters = {};
     if (this.searchTerm) {
-      filters.name = this.searchTerm;
+      filters.search = this.searchTerm;
     }
     if (this.selectedCategoryId) {
       filters.categoryId = this.selectedCategoryId;

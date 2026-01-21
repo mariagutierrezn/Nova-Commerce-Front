@@ -24,6 +24,7 @@ import { APP_CONFIG } from '../../../core/config/app.config';
 export class ProductService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${APP_CONFIG.api.baseUrl}/api/products`;
+  private readonly publicApiUrl = `${APP_CONFIG.api.baseUrl}/api/public/products`;
   private readonly categoriesUrl = `${APP_CONFIG.api.baseUrl}/api/categories`;
 
   /**
@@ -31,54 +32,41 @@ export class ProductService {
    * @param filters - Filtros de búsqueda (categoría, precio, paginación)
    * @returns Observable con respuesta paginada de productos
    *
-   * NOTA: Maneja ambas respuestas:
-   * - Spring Data paginada: { content: [...], totalElements, pageable, ... }
-   * - Respuesta directa: { products: [...], total, page, pageSize }
+   * NOTA: Usa el endpoint público /home y filtra localmente
    */
   getProducts(filters?: ProductFilters): Observable<ProductsResponse> {
-    let params = new HttpParams();
-
-    if (filters?.categoryId) {
-      params = params.set('categoryId', filters.categoryId);
-    }
-    if (filters?.search) {
-      params = params.set('search', filters.search);
-    }
-    if (filters?.minPrice !== undefined) {
-      params = params.set('minPrice', filters.minPrice.toString());
-    }
-    if (filters?.maxPrice !== undefined) {
-      params = params.set('maxPrice', filters.maxPrice.toString());
-    }
-    if (filters?.page !== undefined) {
-      params = params.set('page', filters.page.toString());
-    }
-    if (filters?.pageSize !== undefined) {
-      params = params.set('pageSize', filters.pageSize.toString());
-    }
-
-    return this.http.get<any>(this.apiUrl, { params }).pipe(
-      map((response) => {
-        // Si ya tiene el formato ProductsResponse, retórnalo
-        if (response?.products && Array.isArray(response.products)) {
-          return response as ProductsResponse;
+    // Usa el endpoint /home que ya existe y funciona
+    return this.http.get<Product[]>(`${this.publicApiUrl}/home`).pipe(
+      map((products) => {
+        let filteredProducts = products;
+        
+        // Filtrar por descuento - SOLO mostrar productos con hasDiscount=true
+        if (filters?.hasDiscount === true) {
+          filteredProducts = filteredProducts.filter(p => p.hasDiscount === true);
         }
-        // Si es respuesta paginada Spring Data, transforma a ProductsResponse
-        if (response?.content && Array.isArray(response.content)) {
-          return {
-            products: this.transformProducts(response.content),
-            total: response.totalElements || response.content.length,
-            page: (response.pageable?.pageNumber || 0) + 1,
-            pageSize: response.pageable?.pageSize || response.size || 20,
-          };
+        
+        // Filtrar por categoría
+        if (filters?.categoryId) {
+          filteredProducts = filteredProducts.filter(p => 
+            p.categoryId === filters.categoryId
+          );
         }
-        // Fallback seguro
-        console.warn('Respuesta de productos inesperada:', response);
+        
+        // Filtrar por búsqueda
+        if (filters?.search) {
+          const searchLower = filters.search.toLowerCase();
+          filteredProducts = filteredProducts.filter(p => 
+            p.name?.toLowerCase().includes(searchLower) || 
+            p.description?.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        // Transformar array simple a ProductsResponse
         return {
-          products: [],
-          total: 0,
+          products: this.transformProducts(filteredProducts),
+          total: filteredProducts.length,
           page: 1,
-          pageSize: 20,
+          pageSize: filteredProducts.length,
         };
       })
     );
