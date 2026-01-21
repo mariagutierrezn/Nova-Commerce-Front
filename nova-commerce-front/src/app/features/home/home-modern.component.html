@@ -1,0 +1,163 @@
+<!-- Hero Section Moderno con Gradiente -->
+<section class="hero-modern">
+  <div class="hero-modern__container">
+    <div class="hero-modern__content">
+      <h1 class="hero-modern__title">
+        Descubre Productos<br>
+        <span class="hero-modern__title--gradient">Increíbles</span>
+      </h1>
+      <p class="hero-modern__subtitle">
+        La mejor experiencia de compra en línea con descuentos exclusivos y productos de calidad
+      </p>
+      <div class="hero-modern__buttons">
+        <button class="btn btn--primary" [routerLink]="['/products']">
+          Explorar Catálogo
+        </button>
+        <button class="btn btn--outline" [routerLink]="['/products']">
+          Ver Ofertas
+        </button>
+      </div>
+    </div>
+    <div class="hero-modern__illustration">
+      <div class="hero-modern__shape hero-modern__shape--1"></div>
+      <div class="hero-modern__shape hero-modern__shape--2"></div>
+      <div class="hero-modern__shape hero-modern__shape--3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Productos en Oferta -->
+<section class="products-section" *ngIf="featuredProducts.length > 0">
+  <div class="products-section__container">
+    <div class="products-section__header">
+      <h2 class="products-section__title">Ofertas Destacadas</h2>
+      <p class="products-section__subtitle">Aprovecha estos increíbles descuentos</p>
+    </div>
+
+    <div class="products-grid">
+      <div *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/products', product.id]">
+        <!-- Badge de descuento -->
+        <div *ngIf="product.hasDiscount" class="product-card__badge">
+          -{{ product.discountPercentage }}%
+        </div>
+
+        <!-- Imagen -->
+        <div class="product-card__image">
+          <img
+            [src]="getProductImageUrl(product)"
+            [alt]="product.name"
+            (error)="onImageError($event)">
+        </div>
+
+        <!-- Contenido -->
+        <div class="product-card__content">
+          <h3 class="product-card__name">{{ product.name }}</h3>
+          <p class="product-card__description">{{ product.description | slice:0:80 }}...</p>
+
+          <!-- Precios -->
+          <div class="product-card__pricing">
+            <span *ngIf="product.hasDiscount" class="product-card__old-price">
+              ${{ getOriginalPrice(product) | number: '1.2-2' }}
+            </span>
+            <span class="product-card__price">${{ product.price | number: '1.2-2' }}</span>
+          </div>
+
+          <!-- Stock -->
+          <div class="product-card__stock">
+            <span *ngIf="product.stock && product.stock > 0" class="product-card__stock--available">
+              {{ product.stock }} disponibles
+            </span>
+            <span *ngIf="!product.stock || product.stock === 0" class="product-card__stock--unavailable">
+              Agotado
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Todos los Productos -->
+<section class="products-section products-section--gray" *ngIf="products.length > 0">
+  <div class="products-section__container">
+    <div class="products-section__header">
+      <h2 class="products-section__title">Todos los Productos</h2>
+      <p class="products-section__subtitle">Explora nuestro catálogo completo</p>
+    </div>
+
+    <div class="products-grid">
+      <div *ngFor="let product of products" class="product-card" [routerLink]="['/products', product.id]">
+        <!-- Badge de descuento -->
+        <div *ngIf="product.hasDiscount" class="product-card__badge">
+          -{{ product.discountPercentage }}%
+        </div>
+
+        <!-- Imagen -->
+        <div class="product-card__image">
+          <img
+            [src]="getProductImageUrl(product)"
+            [alt]="product.name"
+            (error)="onImageError($event)">
+        </div>
+
+        <!-- Contenido -->
+        <div class="product-card__content">
+          <h3 class="product-card__name">{{ product.name }}</h3>
+          <p class="product-card__description">{{ product.description | slice:0:80 }}...</p>
+
+          <!-- Precios -->
+          <div class="product-card__pricing">
+            <span *ngIf="product.hasDiscount" class="product-card__old-price">
+              ${{ getOriginalPrice(product) | number: '1.2-2' }}
+            </span>
+            <span class="product-card__price">${{ product.price | number: '1.2-2' }}</span>
+          </div>
+
+          <!-- Stock -->
+          <div class="product-card__stock">
+            <span *ngIf="product.stock && product.stock > 0" class="product-card__stock--available">
+              {{ product.stock }} disponibles
+            </span>
+            <span *ngIf="!product.stock || product.stock === 0" class="product-card__stock--unavailable">
+              Agotado
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ver todos los productos -->
+    <div class="products-section__action">
+      <button class="btn btn--primary btn--lg" [routerLink]="['/products']">
+        Ver Todo el Catálogo
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Loading State -->
+<div *ngIf="loading" class="loading-state">
+  <div class="loading-state__spinner"></div>
+  <p>Cargando productos...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !loading" class="error-state">
+  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="8" x2="12" y2="12"></line>
+    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+  </svg>
+  <p>{{ error }}</p>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && !error && products.length === 0" class="empty-state">
+  <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="9" cy="21" r="1"></circle>
+    <circle cx="20" cy="21" r="1"></circle>
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+  </svg>
+  <h3>No hay productos disponibles</h3>
+  <p>Vuelve pronto para ver nuestras ofertas</p>
+</div>

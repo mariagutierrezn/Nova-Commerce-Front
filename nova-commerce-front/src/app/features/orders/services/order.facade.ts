@@ -34,11 +34,11 @@ import { of } from 'rxjs';
 })
 export class OrderFacade {
   // Private state
-  private orderSubject = new BehaviorSubject<Order | null>(null);
-  private ordersSubject = new BehaviorSubject<Order[]>([]);
-  private loadingSubject = new BehaviorSubject<boolean>(false);
-  private errorSubject = new BehaviorSubject<string | null>(null);
-  private totalSubject = new BehaviorSubject<number>(0);
+  private readonly orderSubject = new BehaviorSubject<Order | null>(null);
+  private readonly ordersSubject = new BehaviorSubject<Order[]>([]);
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+  private readonly totalSubject = new BehaviorSubject<number>(0);
 
   // Public observables
   order$ = this.orderSubject.asObservable().pipe(distinctUntilChanged());
@@ -48,9 +48,9 @@ export class OrderFacade {
   total$ = this.totalSubject.asObservable().pipe(distinctUntilChanged());
 
   constructor(
-    private orderService: OrderService,
-    private userFacade: UserFacade,
-    private tokenService: TokenService
+    private readonly orderService: OrderService,
+    private readonly userFacade: UserFacade,
+    private readonly tokenService: TokenService
   ) {}
 
   /**
@@ -61,12 +61,40 @@ export class OrderFacade {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
-    const customerId = this.tokenService.getCustomerId();
+    // Obtener customerId del token (si viene en el payload JWT)
+    const token = this.tokenService.getAccessToken();
+    let customerId: string | null = null;
+
+    if (token) {
+      const extractedId = this.tokenService.extractCustomerIdFromToken(token);
+      if (extractedId) {
+        customerId = String(extractedId);
+      }
+    }
+
+    // Si no hay customerId en el token, intentar desde localStorage
+    if (!customerId) {
+      const storedId = this.tokenService.getCustomerId();
+      if (storedId) {
+        customerId = String(storedId);
+      }
+    }
+
+    // Validación final
+    if (!customerId) {
+      const errorMsg = 'No se pudo obtener el ID del cliente. Por favor, vuelve a iniciar sesión.';
+      console.error('❌ Error:', errorMsg);
+      this.errorSubject.next(errorMsg);
+      this.loadingSubject.next(false);
+      return;
+    }
 
     const request: CreateOrderRequest = {
-      customerId: customerId ?? undefined,
+      customerId: customerId, // Ya está como String
       items,
     };
+
+    console.log('📦 Creando orden con customerId:', customerId, 'Request completo:', request);
 
     this.orderService
       .createOrder(request)
@@ -77,11 +105,26 @@ export class OrderFacade {
           const currentOrders = this.ordersSubject.value;
           this.ordersSubject.next([order, ...currentOrders]);
           this.totalSubject.next(this.ordersSubject.value.length);
-          console.log('Orden creada:', order);
+          console.log('✅ Orden creada exitosamente:', order);
         }),
         catchError((error) => {
-          const message = error?.error?.message || 'Error al crear la orden';
-          console.error('Error creando orden:', error);
+          let message = 'Error al crear la orden';
+          
+          if (error?.error?.message) {
+            message = error.error.message;
+          } else if (error?.status === 400) {
+            message = 'Datos inválidos. Verifica que el cliente exista en el sistema.';
+          } else if (error?.status === 404) {
+            message = 'Cliente no encontrado. Por favor, contacta al administrador.';
+          }
+          
+          console.error('❌ Error creando orden:', {
+            status: error?.status,
+            message: error?.error?.message,
+            customerId: customerId,
+            error: error
+          });
+          
           this.errorSubject.next(message);
           return of(null);
         }),
@@ -103,20 +146,45 @@ export class OrderFacade {
     const token = this.tokenService.getAccessToken();
     const roles = token ? this.tokenService.extractRolesFromToken(token) : [];
     const isAdmin = roles.includes('ROLE_ADMIN');
-    const customerId = this.tokenService.getCustomerId();
+    
+    // Obtener customerId con doble validación (igual que en createOrder)
+    let customerId: string | null = null;
+    
+    if (token) {
+      const extractedId = this.tokenService.extractCustomerIdFromToken(token);
+      if (extractedId) {
+        customerId = String(extractedId);
+      }
+    }
+    
+    if (!customerId) {
+      const storedId = this.tokenService.getCustomerId();
+      if (storedId) {
+        customerId = String(storedId);
+      }
+    }
+
+    console.log('🔍 Cargando órdenes con:', {
+      isAdmin,
+      customerId,
+      roles
+    });
 
     let orders$: Observable<Order[]>;
 
     // Si es ADMIN, mostrar todas las órdenes del sistema
     if (isAdmin) {
+      console.log('👔 Usuario ADMIN - Cargando todas las órdenes');
       orders$ = this.orderService.getUserOrders();
     }
     // Si es USER con customerId, mostrar solo sus órdenes
     else if (customerId) {
-      orders$ = this.orderService.getOrdersByCustomerId(customerId.toString());
+      console.log('👤 Usuario regular - Cargando órdenes del customer:', customerId);
+      orders$ = this.orderService.getOrdersByCustomerId(customerId);
     }
     // Por defecto, usar el endpoint genérico
     else {
+      console.log('⚠️ Sin customerId - Usando endpoint genérico');
       orders$ = this.orderService.getUserOrders();
     }
 
@@ -125,17 +193,23 @@ export class OrderFacade {
         tap((orders) => {
           this.ordersSubject.next(orders);
           this.totalSubject.next(orders.length);
-          console.log('Órdenes cargadas:', orders);
+          console.log('✅ Órdenes cargadas exitosamente:', orders.length, 'órdenes');
+          console.log('📋 Detalle de órdenes:', orders);
         }),
         catchError((error) => {
           const message = error?.error?.message || 'Error al cargar órdenes';
-          console.error('Error cargando órdenes:', error);
+          console.error('❌ Error cargando órdenes:', {
+            status: error?.status,
+            message: error?.error?.message,
+            customerId: customerId,
+            error: error
+          });
           this.errorSubject.next(message);
           return of([]);
         }),
         finalize(() => this.loadingSubject.next(false))
       )
-      .subscribe((orders) => this.ordersSubject.next(orders));
+      .subscribe();
   }
 
   /**

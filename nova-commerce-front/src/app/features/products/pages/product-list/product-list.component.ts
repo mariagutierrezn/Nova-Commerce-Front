@@ -22,6 +22,7 @@
 
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { ProductFacade } from '../../services/product.facade';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { ProductSkeletonComponent } from '../../components/product-skeleton/product-skeleton.component';
@@ -44,6 +45,7 @@ export class ProductListComponent implements OnInit {
    * Facade de productos (inyectado con inject())
    */
   private readonly productFacade = inject(ProductFacade);
+  private readonly route = inject(ActivatedRoute);
 
   /**
    * Observable de productos (del facade)
@@ -75,9 +77,39 @@ export class ProductListComponent implements OnInit {
    */
   selectedCategoryId: string | null = null;
 
+  /**
+   * Término de búsqueda actual
+   */
+  searchTerm: string | null = null;
+
   ngOnInit(): void {
-    // Cargar productos y categorías al iniciar
-    this.productFacade.loadProducts();
+    // Leer parámetros de la URL (búsqueda y filtros)
+    this.route.queryParams.subscribe(params => {
+      this.searchTerm = params['search'] || null;
+      const discountFilter = params['discount'];
+      
+      // Cargar productos con filtros
+      const filters: any = {};
+      
+      if (this.searchTerm) {
+        filters.name = this.searchTerm;
+      }
+      
+      if (this.selectedCategoryId) {
+        filters.categoryId = this.selectedCategoryId;
+      }
+      
+      // Filtro de ofertas/descuentos
+      if (discountFilter === 'true') {
+        filters.hasDiscount = true;
+        console.log('🏷️ Filtrando productos con descuento');
+      }
+      
+      console.log('🔍 Cargando productos con filtros:', filters);
+      this.productFacade.loadProducts(filters);
+    });
+
+    // Cargar categorías
     this.productFacade.loadCategories();
   }
 
@@ -88,7 +120,14 @@ export class ProductListComponent implements OnInit {
   onCategoryChange(categoryId: string | null): void {
     this.selectedCategoryId = categoryId;
 
-    const filters = categoryId ? { categoryId } : {};
+    const filters: any = {};
+    if (categoryId) {
+      filters.categoryId = categoryId;
+    }
+    if (this.searchTerm) {
+      filters.name = this.searchTerm;
+    }
+    
     this.productFacade.loadProducts(filters);
   }
 
@@ -96,6 +135,14 @@ export class ProductListComponent implements OnInit {
    * Recarga los productos (reintentar después de error)
    */
   retry(): void {
-    this.productFacade.loadProducts();
+    const filters: any = {};
+    if (this.searchTerm) {
+      filters.name = this.searchTerm;
+    }
+    if (this.selectedCategoryId) {
+      filters.categoryId = this.selectedCategoryId;
+    }
+    
+    this.productFacade.loadProducts(filters);
   }
 }

@@ -12,7 +12,7 @@ export interface AdminProductState {
 
 @Injectable({ providedIn: 'root' })
 export class AdminProductFacade {
-  private service = inject(AdminProductService);
+  private readonly service = inject(AdminProductService);
   private _state$ = new BehaviorSubject<AdminProductState>({
     products: [],
     selectedProduct: null,
@@ -37,7 +37,7 @@ export class AdminProductFacade {
     });
   }
 
-  loadProductById(id: number) {
+  loadProductById(id: string) {
     this.setState({ loading: true });
     this.service.getById(id).subscribe({
       next: (selectedProduct) => this.setState({ selectedProduct, loading: false }),
@@ -80,7 +80,7 @@ export class AdminProductFacade {
     });
   }
 
-  uploadImage(productId: number, file: File) {
+  uploadImage(productId: string, file: File) {
     this.setState({ loading: true });
     return this.service.uploadImage(productId, file);
   }
@@ -88,7 +88,7 @@ export class AdminProductFacade {
   /**
    * Actualiza un producto y opcionalmente sube una imagen después de la actualización
    */
-  updateProductWithImage(id: number, input: AdminProductInput, file?: File) {
+  updateProductWithImage(id: string, input: AdminProductInput, file?: File) {
     this.setState({ loading: true });
     this.service.update(id, input).subscribe({
       next: (p) => {
@@ -113,7 +113,7 @@ export class AdminProductFacade {
     });
   }
 
-  updateProduct(id: number, input: AdminProductInput) {
+  updateProduct(id: string, input: AdminProductInput) {
     this.setState({ loading: true });
     this.service.update(id, input).subscribe({
       next: (p) => {
@@ -124,7 +124,7 @@ export class AdminProductFacade {
     });
   }
 
-  setActive(id: number, status: 'ACTIVE' | 'INACTIVE') {
+  setActive(id: string, status: 'ACTIVE' | 'INACTIVE') {
     this.setState({ loading: true });
     this.service.setActive(id, status).subscribe({
       next: (p) => {
@@ -135,7 +135,7 @@ export class AdminProductFacade {
     });
   }
 
-  deleteProduct(id: number) {
+  deleteProduct(id: string) {
     this.setState({ loading: true });
     this.service.delete(id).subscribe({
       next: () => {

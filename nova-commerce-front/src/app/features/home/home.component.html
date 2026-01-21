@@ -1,95 +1,133 @@
-<div class="nc-home">
-  <!-- Hero Carousel Section -->
-  <div class="nc-home__hero nc-home__hero-carousel">
-    <div class="nc-carousel">
-      <!-- Botón Anterior -->
-      <button class="nc-carousel__nav nc-carousel__nav--prev" (click)="prevSlide()" aria-label="Anterior">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      </button>
-
-      <div class="nc-carousel__track" [style.transform]="'translateX(-' + currentSlide * 100 + '%)'">
-        <div
-          class="nc-carousel__slide"
-          *ngFor="let slide of carouselSlides; let i = index"
-          [routerLink]="slide.buttonLink || null"
-          [class.clickable]="!!slide.buttonLink"
-          [attr.tabindex]="slide.buttonLink ? 0 : -1"
-          role="link"
-          aria-label="{{ slide.title }}"
-        >
-          <div class="nc-carousel__content">
-            <h2>{{ slide.title }}</h2>
-            <p>{{ slide.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botón Siguiente -->
-      <button class="nc-carousel__nav nc-carousel__nav--next" (click)="nextSlide()" aria-label="Siguiente">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
-
-      <div class="nc-carousel__indicators">
-        <span
-          *ngFor="let slide of carouselSlides; let i = index"
-          class="nc-carousel__indicator"
-          [class.active]="currentSlide === i"
-          (click)="goToSlide(i)">
-        </span>
+<!-- Hero Section Moderno con Gradiente -->
+<section class="hero-modern">
+  <div class="hero-modern__container">
+    <div class="hero-modern__content">
+      <h1 class="hero-modern__title">
+        Descubre Productos<br>
+        <span class="hero-modern__title--gradient">Increíbles</span>
+      </h1>
+      <p class="hero-modern__subtitle">
+        La mejor experiencia de compra en línea con descuentos exclusivos y productos de calidad
+      </p>
+      <div class="hero-modern__buttons">
+        <button class="btn btn--primary" [routerLink]="['/products']">
+          Explorar Catálogo
+        </button>
+        <button class="btn btn--outline" [routerLink]="['/products']">
+          Ver Ofertas
+        </button>
       </div>
     </div>
+    <div class="hero-modern__illustration">
+      <div class="hero-modern__shape hero-modern__shape--1"></div>
+      <div class="hero-modern__shape hero-modern__shape--2"></div>
+      <div class="hero-modern__shape hero-modern__shape--3"></div>
+    </div>
   </div>
+</section>
 
-  <!-- Estado de Carga -->
-  <div *ngIf="loading" class="nc-home__loading">
-    <div class="spinner"></div>
-    <p>Cargando productos...</p>
-  </div>
+<!-- Productos en Oferta -->
+<section class="products-section" *ngIf="featuredProducts.length > 0">
+  <div class="products-section__container">
+    <div class="products-section__header">
+      <h2 class="products-section__title">Ofertas Destacadas</h2>
+      <p class="products-section__subtitle">Aprovecha estos increíbles descuentos</p>
+    </div>
 
-  <!-- Estado de Error -->
-  <div *ngIf="error && !loading" class="nc-home__error">
-    <p>{{ error }}</p>
-  </div>
-
-  <!-- Grilla de Productos -->
-  <div *ngIf="!loading && !error" class="nc-home__products">
-    <h2>Productos Destacados</h2>
-    <div class="nc-home__grid">
-      <div *ngFor="let product of products" class="nc-product-card">
-        <!-- Imagen del Producto -->
-          <div class="nc-product-card__image">
+    <div class="products-section__grid">
+      <div *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/products', product.id]">
+        <!-- Imagen del producto -->
+        <div class="product-card__image-container">
           <img
-            [src]="product.imageUrl || 'assets/placeholder-product.svg'"
+            class="product-card__image"
+            [src]="getProductImageUrl(product)"
             [alt]="product.name"
             (error)="onImageError($event)">
-          <span class="nc-product-card__badge nc-product-card__type" [ngClass]="'badge--' + (product.productType?.toLowerCase() || 'physical')">
-            {{ product.productType || 'PHYSICAL' }}
-          </span>
+          
+          <!-- Badge de descuento -->
+          <div *ngIf="product.hasDiscount" class="product-card__badge">
+            -{{ product.discountPercentage }}%
+          </div>
         </div>
 
-        <div class="nc-product-card__body">
-          <h3 class="nc-product-card__title">{{ product.name }}</h3>
-          <p class="nc-product-card__description">{{ product.description }}</p>
+        <!-- Contenido -->
+        <div class="product-card__content">
+          <h3 class="product-card__name">{{ product.name }}</h3>
+          <p class="product-card__description">{{ product.description }}</p>
 
-          <div class="nc-product-card__footer">
-            <div class="nc-product-card__price">
-              <span class="currency">$</span>
-              <span class="amount">{{ product.price | number: '1.2-2' }}</span>
-            </div>
-            <button class="nc-product-card__button" [routerLink]="['/products']">
-              Ver Detalles
-            </button>
+          <!-- Precios -->
+          <div class="product-card__pricing">
+            <span class="product-card__price-current">${{ product.price | number: '1.0-0' }}</span>
+            <span *ngIf="product.hasDiscount" class="product-card__price-original">
+              ${{ getOriginalPrice(product) | number: '1.0-0' }}
+            </span>
           </div>
+
+          <!-- Acciones -->
+          <div class="product-card__actions">
+            <button class="btn btn--secondary">Ver Detalles</button>
+            <button class="btn btn--tertiary">Agregar</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Sin Productos -->
-  <div *ngIf="!loading && !error && products.length === 0" class="nc-home__empty">
-    <p>No hay productos disponibles en este momento.</p>
+<!-- Todos los Productos -->
+<section class="products-section" *ngIf="products.length > 0 && !loading">
+  <div class="products-section__container">
+    <div class="products-section__header">
+      <h2 class="products-section__title">Todos los Productos</h2>
+      <p class="products-section__subtitle">Explora nuestro catálogo completo</p>
+    </div>
+
+    <div class="products-section__grid">
+      <div *ngFor="let product of products" class="product-card" [routerLink]="['/products', product.id]">
+        <!-- Imagen del producto -->
+        <div class="product-card__image-container">
+          <img
+            class="product-card__image"
+            [src]="getProductImageUrl(product)"
+            [alt]="product.name"
+            (error)="onImageError($event)">
+          
+          <!-- Badge de descuento -->
+          <div *ngIf="product.hasDiscount" class="product-card__badge">
+            -{{ product.discountPercentage }}%
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="product-card__content">
+          <h3 class="product-card__name">{{ product.name }}</h3>
+          <p class="product-card__description">{{ product.description }}</p>
+
+          <!-- Precios -->
+          <div class="product-card__pricing">
+            <span class="product-card__price-current">${{ product.price | number: '1.0-0' }}</span>
+            <span *ngIf="product.hasDiscount" class="product-card__price-original">
+              ${{ getOriginalPrice(product) | number: '1.0-0' }}
+            </span>
+          </div>
+
+          <!-- Acciones -->
+          <div class="product-card__actions">
+            <button class="btn btn--secondary">Ver Detalles</button>
+            <button class="btn btn--tertiary">Agregar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</section>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading">
+  Cargando productos...
+</div>
+
+<!-- Error -->
+<div *ngIf="error && !loading" class="loading">
+  {{ error }}
 </div>

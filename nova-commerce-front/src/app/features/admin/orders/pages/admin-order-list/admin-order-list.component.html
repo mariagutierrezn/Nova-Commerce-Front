@@ -47,7 +47,7 @@
                 {{ o.status }}
               </span>
             </td>
-            <td><strong>\${{ o.totalAfterDiscount | number:'1.2-2' }}</strong></td>
+            <td>{{ o.totalAfterDiscount | currency:'USD':'symbol':'1.0-0' }}</td>
             <td>
               <a [routerLink]="['/admin/orders', o.id]" class="btn-view">
                 Ver detalle →

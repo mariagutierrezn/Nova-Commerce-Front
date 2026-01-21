@@ -12,8 +12,13 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'products',
+        redirectTo: 'dashboard',
         pathMatch: 'full',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./admin-dashboard.component').then((m) => m.AdminDashboardComponent),
       },
       {
         path: 'products',
@@ -56,6 +61,30 @@ export const ADMIN_ROUTES: Routes = [
             loadComponent: () =>
               import('./orders/pages/admin-order-detail/admin-order-detail.component').then(
                 (m) => m.AdminOrderDetailComponent
+              ),
+          },
+        ],
+      },
+      {
+        path: 'customers',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./customers/pages/admin-customer-list/admin-customer-list.component').then(
+                (m) => m.AdminCustomerListComponent
+              ),
+          },
+        ],
+      },
+      {
+        path: 'discounts',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./discounts/pages/admin-discount-list/admin-discount-list.component').then(
+                (m) => m.AdminDiscountListComponent
               ),
           },
         ],

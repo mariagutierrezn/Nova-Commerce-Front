@@ -28,13 +28,13 @@ export class LoginComponent implements OnDestroy {
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
-  private destroy$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private fb: FormBuilder,
-    private authFacade: AuthFacade,
-    private router: Router,
-    private route: ActivatedRoute
+    private readonly fb: FormBuilder,
+    private readonly authFacade: AuthFacade,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       userIdentifier: ['', [Validators.required, Validators.minLength(3)]],
@@ -116,7 +116,7 @@ export class LoginComponent implements OnDestroy {
    */
   getErrorMessage(field: string): string {
     const control = this.loginForm.get(field);
-    if (!control || !control.touched) return '';
+    if (!control?.touched) return '';
 
     if (control.hasError('required')) {
       return `${field === 'userIdentifier' ? 'Usuario' : 'Contraseña'} es requerido`;
@@ -128,5 +128,23 @@ export class LoginComponent implements OnDestroy {
     }
 
     return '';
+  }
+
+  /**
+   * Login con Google - Redirige a OAuth2
+   */
+  loginWithGoogle(): void {
+    console.log('Redirigiendo a login con Google...');
+    // Redirige al endpoint de autorización OAuth2 de Google en el backend
+    window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+  }
+
+  /**
+   * Login con Apple - Redirige a OAuth2
+   */
+  loginWithApple(): void {
+    console.log('Redirigiendo a login con Apple...');
+    // Redirige al endpoint de autorización OAuth2 de Apple en el backend
+    window.location.href = 'http://localhost:8080/oauth2/authorization/apple';
   }
 }

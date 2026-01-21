@@ -37,7 +37,7 @@ export interface Order {
 }
 
 export interface CreateOrderRequest {
-  customerId?: number;
+  customerId: string; // Backend espera String @NotNull
   items: OrderItem[];
 }
 

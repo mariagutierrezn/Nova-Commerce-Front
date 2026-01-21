@@ -1,95 +1,141 @@
 <div class="nc-login nc-register">
   <div class="nc-login__container">
+    <!-- Logo moderno -->
     <div class="nc-login__header">
       <div class="nc-login__logo">
-        <span class="nc-login__logo-text">NOVA</span>
+        <img class="nc-login__logo-img" src="/logo.svg" alt="NovaCommerce" />
       </div>
       <h1 class="nc-login__title">Crear Cuenta</h1>
-      <p class="nc-login__subtitle">Regístrate para acceder a NovaCommerce</p>
+      <p class="nc-login__subtitle">Regístrate en NovaCommerce</p>
     </div>
 
     <form (ngSubmit)="submit()" class="nc-login__form">
-      <div class="nc-login__field">
-        <label class="nc-login__label">Usuario</label>
-        <input class="nc-login__input" [(ngModel)]="model.username" name="username" required placeholder="Usuario" />
-        <span class="nc-login__error" *ngIf="fieldErrors['username']">{{ fieldErrors['username'][0] }}</span>
-      </div>
-
-      <div class="nc-login__field">
-        <label class="nc-login__label">Email</label>
-        <input class="nc-login__input" [(ngModel)]="model.email" name="email" type="email" required placeholder="correo@ejemplo.com" />
-        <span class="nc-login__error" *ngIf="fieldErrors['email']">{{ fieldErrors['email'][0] }}</span>
-      </div>
-
-      <div class="nc-login__field">
-        <label class="nc-login__label">Nombre</label>
-        <input class="nc-login__input" [(ngModel)]="model.firstName" name="firstName" required placeholder="Nombre" />
-        <span class="nc-login__error" *ngIf="fieldErrors['firstName']">{{ fieldErrors['firstName'][0] }}</span>
-      </div>
-
-      <div class="nc-login__field">
-        <label class="nc-login__label">Apellido</label>
-        <input class="nc-login__input" [(ngModel)]="model.lastName" name="lastName" required placeholder="Apellido" />
-        <span class="nc-login__error" *ngIf="fieldErrors['lastName']">{{ fieldErrors['lastName'][0] }}</span>
-      </div>
-
-      <div class="nc-login__field">
-        <label class="nc-login__label">Teléfono</label>
-        <input class="nc-login__input" [(ngModel)]="model.phone" name="phone" placeholder="Opcional" />
-        <span class="nc-login__error" *ngIf="fieldErrors['phone']">{{ fieldErrors['phone'][0] }}</span>
-      </div>
-
-      <div class="nc-login__field">
-        <label class="nc-login__label">Contraseña</label>
-        <div style="position:relative">
-          <input
-            [type]="showPassword ? 'text' : 'password'"
-            class="nc-login__input"
-            [(ngModel)]="model.password"
-            name="password"
-            required
-            minlength="8"
-            placeholder="Mínimo 8 caracteres"
-            (ngModelChange)="checkPasswords()"
-          />
-          <button type="button" class="nc-login__toggle" (click)="toggleShowPassword()" aria-label="Mostrar contraseña">
-            {{ showPassword ? 'Ocultar' : 'Mostrar' }}
-          </button>
+      <div class="nc-register__grid">
+        <div class="nc-login__field">
+          <label class="nc-login__label" for="register-username">Usuario</label>
+          <input id="register-username" type="text" class="nc-login__input" [(ngModel)]="model.username" name="username" required placeholder="Usuario" autocomplete="username" />
+          <span class="nc-login__error" *ngIf="fieldErrors['username']">{{ fieldErrors['username'][0] }}</span>
         </div>
-        <span class="nc-login__error" *ngIf="fieldErrors['password']">{{ fieldErrors['password'][0] }}</span>
-      </div>
 
-      <div class="nc-login__field">
-        <label class="nc-login__label">Confirmar Contraseña</label>
-        <input
-          [type]="showPassword ? 'text' : 'password'"
-          class="nc-login__input"
-          [(ngModel)]="confirmPassword"
-          name="confirmPassword"
-          required
-          placeholder="Repite la contraseña"
-          (ngModelChange)="checkPasswords()"
-          (blur)="confirmTouched = true"
-        />
-        <span class="nc-login__error" *ngIf="fieldErrors['confirmPassword']">{{ fieldErrors['confirmPassword'][0] }}</span>
-      </div>
+        <div class="nc-login__field">
+          <label class="nc-login__label" for="register-email">Email</label>
+          <input id="register-email" class="nc-login__input" [(ngModel)]="model.email" name="email" type="email" required placeholder="correo@ejemplo.com" autocomplete="email" />
+          <span class="nc-login__error" *ngIf="fieldErrors['email']">{{ fieldErrors['email'][0] }}</span>
+        </div>
 
-      <div class="nc-login__alert" *ngIf="error">
-        {{ error }}
-        <ul *ngIf="fieldErrors && (fieldErrors | keys)?.length">
-          <li *ngFor="let key of (fieldErrors | keys)">{{ key }}: {{ fieldErrors[key][0] }}</li>
-        </ul>
-      </div>
+        <div class="nc-login__field">
+          <label class="nc-login__label" for="register-firstName">Nombre</label>
+          <input id="register-firstName" type="text" class="nc-login__input" [(ngModel)]="model.firstName" name="firstName" required placeholder="Nombre" autocomplete="given-name" />
+          <span class="nc-login__error" *ngIf="fieldErrors['firstName']">{{ fieldErrors['firstName'][0] }}</span>
+        </div>
 
-      <button type="submit" class="nc-login__button" [disabled]="loading || passwordsMismatch">
-        <span *ngIf="!loading">Crear cuenta</span>
-        <span *ngIf="loading" class="nc-login__spinner-wrapper">
-          <svg class="nc-login__spinner" viewBox="0 0 24 24">
-            <circle class="nc-login__spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
-          </svg>
-          Enviando...
-        </span>
-      </button>
+        <div class="nc-login__field">
+          <label class="nc-login__label" for="register-lastName">Apellido</label>
+          <input id="register-lastName" type="text" class="nc-login__input" [(ngModel)]="model.lastName" name="lastName" required placeholder="Apellido" autocomplete="family-name" />
+          <span class="nc-login__error" *ngIf="fieldErrors['lastName']">{{ fieldErrors['lastName'][0] }}</span>
+        </div>
+
+        <div class="nc-login__field">
+          <label class="nc-login__label" for="register-phone">Teléfono</label>
+          <input id="register-phone" type="tel" class="nc-login__input" [(ngModel)]="model.phone" name="phone" placeholder="Opcional" autocomplete="tel" />
+          <span class="nc-login__error" *ngIf="fieldErrors['phone']">{{ fieldErrors['phone'][0] }}</span>
+        </div>
+
+        <div class="nc-login__field">
+          <label class="nc-login__label" for="register-address">Dirección</label>
+          <input id="register-address" type="text" class="nc-login__input" [(ngModel)]="model.address" name="address" placeholder="Opcional" autocomplete="address-line1" />
+          <span class="nc-login__error" *ngIf="fieldErrors['address']">{{ fieldErrors['address'][0] }}</span>
+        </div>
+
+        <div class="nc-login__field nc-register__field--full">
+          <label class="nc-login__label" for="register-password">Contraseña</label>
+          <div class="nc-register__password">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="register-password"
+              class="nc-login__input"
+              [(ngModel)]="model.password"
+              name="password"
+              required
+              minlength="8"
+              placeholder="Mínimo 8 caracteres"
+              (ngModelChange)="checkPasswords()"
+              [attr.autocomplete]="showPassword ? 'off' : 'new-password'"
+            />
+            <button
+              type="button"
+              class="nc-register__eye"
+              (click)="toggleShowPassword()"
+              [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3l18 18"></path>
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                <path d="M9.9 4.3A10.3 10.3 0 0 1 12 4c6.5 0 10 8 10 8a18 18 0 0 1-5.2 6.2"></path>
+                <path d="M6.1 6.1A18.2 18.2 0 0 0 2 12s3.5 8 10 8c1 0 2-.2 3-.5"></path>
+              </svg>
+            </button>
+          </div>
+          <span class="nc-login__error" *ngIf="fieldErrors['password']">{{ fieldErrors['password'][0] }}</span>
+        </div>
+
+        <div class="nc-login__field nc-register__field--full">
+          <label class="nc-login__label" for="register-confirmPassword">Confirmar Contraseña</label>
+          <div class="nc-register__password">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="register-confirmPassword"
+              class="nc-login__input"
+              [(ngModel)]="confirmPassword"
+              name="confirmPassword"
+              required
+              placeholder="Repite la contraseña"
+              (ngModelChange)="checkPasswords()"
+              (blur)="confirmTouched = true"
+              [attr.autocomplete]="showPassword ? 'off' : 'new-password'"
+            />
+            <button
+              type="button"
+              class="nc-register__eye"
+              (click)="toggleShowPassword()"
+              [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3l18 18"></path>
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                <path d="M9.9 4.3A10.3 10.3 0 0 1 12 4c6.5 0 10 8 10 8a18 18 0 0 1-5.2 6.2"></path>
+                <path d="M6.1 6.1A18.2 18.2 0 0 0 2 12s3.5 8 10 8c1 0 2-.2 3-.5"></path>
+              </svg>
+            </button>
+          </div>
+          <span class="nc-login__error" *ngIf="fieldErrors['confirmPassword']">{{ fieldErrors['confirmPassword'][0] }}</span>
+        </div>
+
+        <div class="nc-login__alert nc-register__field--full" *ngIf="error">
+          {{ error }}
+          <ul *ngIf="fieldErrors && (fieldErrors | keys)?.length">
+            <li *ngFor="let key of (fieldErrors | keys)">{{ key }}: {{ fieldErrors[key][0] }}</li>
+          </ul>
+        </div>
+
+        <button type="submit" class="nc-login__button nc-register__field--full" [disabled]="loading || passwordsMismatch">
+          <span *ngIf="!loading">Crear cuenta</span>
+          <span *ngIf="loading" class="nc-login__spinner-wrapper">
+            <svg class="nc-login__spinner" viewBox="0 0 24 24">
+              <circle class="nc-login__spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+            </svg>
+            Enviando...
+          </span>
+        </button>
+      </div>
 
       <div class="nc-login__footer">
         <a routerLink="/auth/login" class="nc-login__register-btn">Volver a login</a>

@@ -28,7 +28,7 @@
         class="form-input"
         [disabled]="loadingCategories"
       >
-        <option [value]="undefined">
+        <option value="DEFAULT">
           {{ loadingCategories ? '⏳ Cargando categorías...' : 'Seleccionar categoría' }}
         </option>
         <option *ngFor="let category of categories" [value]="category.id">
@@ -55,11 +55,89 @@
     </select>
   </label>
 
+  <!-- Campos de Descuento -->
   <label class="form-field">
-    <span class="form-label">Imagen</span>
-    <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-input" />
-    <div class="preview" *ngIf="previewSrc">
-      <img [src]="previewSrc" alt="Preview" />
+    <span class="form-label">¿Tiene descuento?</span>
+    <div class="discount-toggle">
+      <label class="switch">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="model.hasDiscount" 
+          (ngModelChange)="onDiscountToggle()">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">{{ model.hasDiscount ? 'Sí' : 'No' }}</span>
+    </div>
+  </label>
+
+  <label class="form-field" *ngIf="model.hasDiscount">
+    <span class="form-label">Porcentaje de descuento *</span>
+    <div class="discount-input-group">
+      <input 
+        type="number" 
+        min="0" 
+        max="100" 
+        step="5"
+        [(ngModel)]="model.discountPercentage" 
+        (ngModelChange)="emitChange()" 
+        class="form-input" 
+        placeholder="10" />
+      <span class="input-suffix">%</span>
+    </div>
+    <p class="hint" *ngIf="model.price && model.discountPercentage">
+      Precio con descuento: {{ calculateDiscountedPrice() | currency:'USD':'symbol':'1.0-0' }}
+    </p>
+  </label>
+
+  <label class="form-field full-width">
+    <span class="form-label">Imagen del Producto</span>
+    <div class="image-upload-container">
+      <div class="upload-tabs">
+        <button 
+          type="button"
+          class="tab-button" 
+          [class.active]="imageUploadMode === 'url'"
+          (click)="setImageUploadMode('url')">
+          🔗 URL
+        </button>
+        <button 
+          type="button"
+          class="tab-button" 
+          [class.active]="imageUploadMode === 'file'"
+          (click)="setImageUploadMode('file')">
+          📁 Archivo Local
+        </button>
+      </div>
+
+      <div class="upload-content" *ngIf="imageUploadMode === 'url'">
+        <input 
+          type="url"
+          [(ngModel)]="model.imageUrl" 
+          (ngModelChange)="onImageUrlChange()"
+          class="form-input" 
+          placeholder="https://ejemplo.com/imagen.jpg" />
+        <p class="hint">Ingresa la URL completa de la imagen</p>
+      </div>
+
+      <div class="upload-content" *ngIf="imageUploadMode === 'file'">
+        <input 
+          type="file" 
+          accept="image/*" 
+          (change)="onFileSelected($event)" 
+          class="form-input" 
+          #fileInput />
+        <p class="hint">Selecciona un archivo de imagen (JPG, PNG, GIF, WebP)</p>
+      </div>
+
+      <div class="image-preview" *ngIf="getPreviewImage()">
+        <img [src]="getPreviewImage()" alt="Preview" />
+        <button 
+          type="button"
+          class="btn-remove-image" 
+          (click)="removeImage()">
+          ✕ Eliminar
+        </button>
+      </div>
     </div>
   </label>
 </div>

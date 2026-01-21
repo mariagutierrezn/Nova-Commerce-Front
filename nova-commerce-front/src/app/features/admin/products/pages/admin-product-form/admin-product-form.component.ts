@@ -15,7 +15,7 @@ import { AdminProductInput } from '../../admin-product.model';
 export class AdminProductFormComponent implements OnInit {
   private facade = inject(AdminProductFacade);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private readonly router = inject(Router);
 
   model: AdminProductInput = {
     name: '',
@@ -24,7 +24,7 @@ export class AdminProductFormComponent implements OnInit {
     stockQuantity: 0,
     status: 'ACTIVE',
     productType: 'PHYSICAL',
-    categoryId: undefined
+    categoryId: 'DEFAULT' // Valor por defecto requerido
   };
   isEdit = false;
   selectedFile: File | null = null;
@@ -33,7 +33,7 @@ export class AdminProductFormComponent implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.isEdit = true;
-      const id = parseInt(idParam, 10);
+      const id = idParam; // id es string, no necesita parseInt
       this.facade.loadProductById(id);
       (this.facade as any).products$.subscribe((state: any) => {
         if (state.selectedProduct) {
@@ -55,21 +55,21 @@ export class AdminProductFormComponent implements OnInit {
   save() {
     if (this.isEdit) {
       const idParam = this.route.snapshot.paramMap.get('id')!;
-      const id = parseInt(idParam, 10);
-      // Si hay un archivo seleccionado, actualizar y subir la imagen en la fachada
+      const id = idParam; // id es string
+      // Actualizar y esperar antes de navegar
       this.facade.updateProductWithImage(id, this.model, this.selectedFile ?? undefined);
-      if (this.selectedFile) {
-        // Esperamos la subida en la fachada; navegación la hacemos tras una pequeña demora
-        // (la fachada ya actualiza el estado cuando termina). Navegamos tras 500ms para
-        // dar tiempo a la operación asíncrona. Si necesitas una navegación más exacta,
-        // podemos devolver observables desde la fachada.
-        setTimeout(() => this.router.navigate(['/admin/products']), 500);
-        return;
-      }
+      setTimeout(() => {
+        this.facade.loadProducts(); // Recargar lista
+        this.router.navigate(['/admin/products']);
+      }, 1000);
     } else {
+      // Crear y esperar antes de navegar
       this.facade.createProductWithImage(this.model, this.selectedFile ?? undefined);
+      setTimeout(() => {
+        this.facade.loadProducts(); // Recargar lista
+        this.router.navigate(['/admin/products']);
+      }, 1000);
     }
-    this.router.navigate(['/admin/products']);
   }
 
   onModelChange(updatedModel: AdminProductInput) {
