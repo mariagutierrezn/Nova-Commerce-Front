@@ -12,7 +12,7 @@ export interface AdminProductState {
 
 @Injectable({ providedIn: 'root' })
 export class AdminProductFacade {
-  private service = inject(AdminProductService);
+  private readonly service = inject(AdminProductService);
   private _state$ = new BehaviorSubject<AdminProductState>({
     products: [],
     selectedProduct: null,

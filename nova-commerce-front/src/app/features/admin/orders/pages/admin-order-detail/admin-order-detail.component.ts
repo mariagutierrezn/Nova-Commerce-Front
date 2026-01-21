@@ -13,7 +13,7 @@ import { Observable } from 'rxjs';
   styleUrls: ['./admin-order-detail.component.scss'],
 })
 export class AdminOrderDetailComponent implements OnInit {
-  private facade = inject(AdminOrderFacade);
+  private readonly facade = inject(AdminOrderFacade);
   private route = inject(ActivatedRoute);
   state$ = this.facade.state$;
 

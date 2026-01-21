@@ -377,8 +377,8 @@ interface DashboardMetrics {
   `]
 })
 export class AdminDashboardComponent implements OnInit {
-  private productFacade = inject(AdminProductFacade);
-  private orderFacade = inject(AdminOrderFacade);
+  private readonly productFacade = inject(AdminProductFacade);
+  private readonly orderFacade = inject(AdminOrderFacade);
 
   metrics: DashboardMetrics = {
     totalOrders: 0,

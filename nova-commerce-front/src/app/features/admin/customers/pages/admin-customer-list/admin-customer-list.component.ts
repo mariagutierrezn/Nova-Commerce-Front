@@ -35,8 +35,8 @@ import { CustomerService, Customer } from '../../customer.service';
           
           <select class="admin-select" [(ngModel)]="statusFilter" (change)="filterCustomers()">
             <option value="">Todos los estados</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
+            <option value="ACTIVE">Activos</option>
+            <option value="INACTIVE">Inactivos</option>
           </select>
         </div>
 
@@ -44,13 +44,13 @@ import { CustomerService, Customer } from '../../customer.service';
           <table class="admin-table">
             <thead>
               <tr>
-                <th>Cliente</th>
-                <th>Contacto</th>
-                <th>Pedidos</th>
-                <th>Total Gastado</th>
-                <th>Estado</th>
-                <th>Fecha Registro</th>
-                <th>Acciones</th>
+                <th style="width: 25%;">Cliente</th>
+                <th style="width: 25%;">Contacto</th>
+                <th style="width: 10%;">Pedidos</th>
+                <th style="width: 15%;">Total Gastado</th>
+                <th style="width: 10%;">Estado</th>
+                <th style="width: 10%;">Fecha Registro</th>
+                <th style="width: 5%;">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -58,28 +58,30 @@ import { CustomerService, Customer } from '../../customer.service';
                 <td>
                   <div class="customer-info">
                     <div class="customer-avatar">{{ getCustomerInitial(customer) }}</div>
-                    <span class="customer-name">{{ getCustomerName(customer) }}</span>
+                    <div class="customer-details">
+                      <div class="customer-name">{{ getCustomerName(customer) }}</div>
+                    </div>
                   </div>
                 </td>
                 <td>
                   <div class="customer-contact">
-                    <div>{{ customer.email }}</div>
-                    <div class="text-muted">{{ customer.phone || 'N/A' }}</div>
+                    <div class="contact-email">{{ customer.email }}</div>
+                    <div class="contact-phone">{{ customer.phone || 'N/A' }}</div>
                   </div>
                 </td>
-                <td>{{ customer.totalOrders || 0 }}</td>
-                <td>{{ customer.totalSpent || 0 | number: '1.2-2' }}</td>
+                <td class="text-center">{{ customer.totalOrders || 0 }}</td>
+                <td>{{ (customer.totalSpent || 0) | currency:'USD':'symbol':'1.0-0' }}</td>
                 <td>
-                  <span class="badge" [class.badge--success]="customer.status === 'active'" 
-                        [class.badge--danger]="customer.status === 'inactive'">
-                    {{ customer.status === 'active' ? 'Activo' : 'Inactivo' }}
+                  <span class="badge" [class.badge--success]="customer.status === 'ACTIVE'" 
+                        [class.badge--danger]="customer.status !== 'ACTIVE'">
+                    {{ customer.status === 'ACTIVE' ? 'ACTIVO' : 'INACTIVO' }}
                   </span>
                 </td>
                 <td>{{ customer.createdAt | date: 'dd/MM/yyyy' }}</td>
                 <td>
                   <div class="admin-table__actions">
                     <button class="btn-icon" [routerLink]="['/admin/customers', customer.id]" title="Ver detalles">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                       </svg>
@@ -178,26 +180,56 @@ import { CustomerService, Customer } from '../../customer.service';
     }
 
     .customer-avatar {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
       border-radius: 50%;
-      background: var(--admin-primary);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .customer-details {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
 
     .customer-name {
       font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .customer-contact .text-muted {
-      font-size: 0.85rem;
+    .customer-contact {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .contact-email {
+      font-size: 0.875rem;
+      color: var(--admin-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-phone {
+      font-size: 0.8rem;
       color: var(--admin-text-muted);
-      margin-top: 0.25rem;
+    }
+
+    .text-center {
+      text-align: center;
     }
 
     .badge {
@@ -268,7 +300,7 @@ import { CustomerService, Customer } from '../../customer.service';
   `]
 })
 export class AdminCustomerListComponent implements OnInit {
-  private customerService = inject(CustomerService);
+  private readonly customerService = inject(CustomerService);
 
   customers: Customer[] = [];
   filteredCustomers: Customer[] = [];

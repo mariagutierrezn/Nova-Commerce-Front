@@ -15,9 +15,9 @@ interface PagedResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class AdminProductService {
-  private http = inject(HttpClient);
-  private base = `${APP_CONFIG.api.baseUrl}/api`;
-  private resource = `${this.base}/products`;
+  private readonly http = inject(HttpClient);
+  private readonly base = `${APP_CONFIG.api.baseUrl}/api`;
+  private readonly resource = `${this.base}/products`;
 
   list(): Observable<AdminProduct[]> {
     return this.http.get<PagedResponse<AdminProduct>>(`${this.resource}`)

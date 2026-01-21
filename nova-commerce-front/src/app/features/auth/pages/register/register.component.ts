@@ -13,8 +13,8 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
-  private authService = inject(AuthService);
-  private router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   model = {
     username: '',
@@ -23,6 +23,7 @@ export class RegisterComponent {
     firstName: '',
     lastName: '',
     phone: '',
+    address: '',
   };
 
   loading = false;

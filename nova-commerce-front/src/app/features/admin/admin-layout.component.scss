@@ -53,25 +53,11 @@
     gap: var(--spacing-sm);
   }
 
-  &__logo-icon {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-accent) 100%);
-    color: #ffffff;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
-    font-family: var(--font-display);
-  }
-
-  &__brand {
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
-    color: var(--admin-text-primary);
-    font-family: var(--font-display);
+  &__logo-img {
+    width: 148px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
   }
 
   /* Navigation */
@@ -94,6 +80,15 @@
     font-weight: var(--font-medium);
     transition: all var(--transition-base);
     position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     &:hover {
       background: rgba(59, 130, 246, 0.1);
@@ -204,6 +199,28 @@
   top: 0;
   z-index: var(--z-sticky);
 
+  &__logo {
+    display: inline-flex;
+    align-items: center;
+    margin-right: var(--spacing-lg);
+    flex-shrink: 0;
+    text-decoration: none;
+    opacity: 0.95;
+    transition: opacity var(--transition-fast);
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &__logo-img {
+    width: 138px;
+    height: 34px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
+  }
+
   &__search {
     display: flex;
     align-items: center;
@@ -213,6 +230,8 @@
     border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.05);
     width: 400px;
+    flex: 1;
+    max-width: 520px;
 
     svg {
       color: var(--admin-text-muted);
@@ -361,6 +380,11 @@
 
     &__search {
       max-width: 200px;
+    }
+
+    &__logo-img {
+      width: 112px;
+      height: 30px;
     }
 
     &__username {

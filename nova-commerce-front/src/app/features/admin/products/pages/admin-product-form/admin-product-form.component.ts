@@ -15,7 +15,7 @@ import { AdminProductInput } from '../../admin-product.model';
 export class AdminProductFormComponent implements OnInit {
   private facade = inject(AdminProductFacade);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private readonly router = inject(Router);
 
   model: AdminProductInput = {
     name: '',

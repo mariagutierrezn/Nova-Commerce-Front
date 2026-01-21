@@ -4,28 +4,29 @@ import { Observable } from 'rxjs';
 
 export interface Customer {
   id: string;
-  userId: string;
+  userId?: string;
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
-  address?: string;
-  totalOrders: number;
-  totalSpent: number;
-  status: 'active' | 'inactive';
+  address?: any;
+  totalOrders?: number;
+  totalSpent?: number;
+  status: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class CustomerService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
   private readonly API_URL = 'http://localhost:8080/api/customers';
 
   /**
    * Obtiene todos los clientes (endpoint de admin)
+   * Calcula totalOrders y totalSpent desde las órdenes
    */
   getAllCustomers(): Observable<Customer[]> {
     return this.http.get<Customer[]>(this.API_URL);

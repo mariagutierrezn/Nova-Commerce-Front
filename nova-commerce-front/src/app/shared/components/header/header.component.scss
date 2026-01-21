@@ -36,25 +36,11 @@
     }
   }
 
-  &__logo-icon {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--user-primary) 0%, #2563eb 100%);
-    color: #ffffff;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
-    font-family: var(--font-display);
-  }
-
-  &__brand {
-    font-size: var(--text-xl);
-    font-weight: var(--font-bold);
-    font-family: var(--font-display);
-    letter-spacing: -0.5px;
+  &__logo-img {
+    width: 132px;
+    height: 34px;
+    object-fit: contain;
+    display: block;
   }
 
   /* === NAVIGATION === */
@@ -220,14 +206,9 @@
   }
 
   @media (max-width: 640px) {
-    &__logo-icon {
-      width: 36px;
-      height: 36px;
-      font-size: var(--text-lg);
-    }
-
-    &__brand {
-      font-size: var(--text-lg);
+    &__logo-img {
+      width: 112px;
+      height: 30px;
     }
 
     &__actions {

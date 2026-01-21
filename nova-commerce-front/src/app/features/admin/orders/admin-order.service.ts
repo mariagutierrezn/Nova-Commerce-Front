@@ -6,9 +6,9 @@ import { AdminOrder, AdminOrderStatus } from './admin-order.model';
 
 @Injectable({ providedIn: 'root' })
 export class AdminOrderService {
-  private http = inject(HttpClient);
-  private base = `${APP_CONFIG.api.baseUrl}/api`;
-  private resource = `${this.base}/orders`;
+  private readonly http = inject(HttpClient);
+  private readonly base = `${APP_CONFIG.api.baseUrl}/api`;
+  private readonly resource = `${this.base}/orders`;
 
   list(status?: AdminOrderStatus): Observable<AdminOrder[]> {
     let params = new HttpParams();

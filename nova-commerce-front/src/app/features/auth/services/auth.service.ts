@@ -30,7 +30,7 @@ import {
 export class AuthService {
   private readonly API_URL = 'http://localhost:8080/api/auth';
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   /**
    * Autentica al usuario con el backend
@@ -69,6 +69,7 @@ export class AuthService {
     firstName: string;
     lastName: string;
     phone?: string;
+    address?: string;
   }) {
     return this.http.post(`${this.API_URL}/public/register`, payload);
   }

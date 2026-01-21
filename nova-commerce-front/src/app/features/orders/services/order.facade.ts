@@ -34,11 +34,11 @@ import { of } from 'rxjs';
 })
 export class OrderFacade {
   // Private state
-  private orderSubject = new BehaviorSubject<Order | null>(null);
-  private ordersSubject = new BehaviorSubject<Order[]>([]);
-  private loadingSubject = new BehaviorSubject<boolean>(false);
-  private errorSubject = new BehaviorSubject<string | null>(null);
-  private totalSubject = new BehaviorSubject<number>(0);
+  private readonly orderSubject = new BehaviorSubject<Order | null>(null);
+  private readonly ordersSubject = new BehaviorSubject<Order[]>([]);
+  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
+  private readonly errorSubject = new BehaviorSubject<string | null>(null);
+  private readonly totalSubject = new BehaviorSubject<number>(0);
 
   // Public observables
   order$ = this.orderSubject.asObservable().pipe(distinctUntilChanged());
@@ -48,9 +48,9 @@ export class OrderFacade {
   total$ = this.totalSubject.asObservable().pipe(distinctUntilChanged());
 
   constructor(
-    private orderService: OrderService,
-    private userFacade: UserFacade,
-    private tokenService: TokenService
+    private readonly orderService: OrderService,
+    private readonly userFacade: UserFacade,
+    private readonly tokenService: TokenService
   ) {}
 
   /**

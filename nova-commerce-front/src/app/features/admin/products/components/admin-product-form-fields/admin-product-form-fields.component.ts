@@ -28,7 +28,7 @@ export class AdminProductFormFieldsComponent implements OnInit {
   previewSrc: string | null = null;
   imageUploadMode: 'url' | 'file' = 'url';
 
-  private categoryService = inject(CategoryService);
+  private readonly categoryService = inject(CategoryService);
   categories: Category[] = [];
   loadingCategories = true;
 
