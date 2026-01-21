@@ -45,12 +45,11 @@ import { CustomerService, Customer } from '../../customer.service';
             <thead>
               <tr>
                 <th style="width: 25%;">Cliente</th>
-                <th style="width: 25%;">Contacto</th>
+                <th style="width: 30%;">Contacto</th>
                 <th style="width: 10%;">Pedidos</th>
                 <th style="width: 15%;">Total Gastado</th>
                 <th style="width: 10%;">Estado</th>
-                <th style="width: 10%;">Fecha Registro</th>
-                <th style="width: 5%;">Acciones</th>
+                <th style="width: 10%;">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -77,9 +76,23 @@ import { CustomerService, Customer } from '../../customer.service';
                     {{ customer.status === 'ACTIVE' ? 'ACTIVO' : 'INACTIVO' }}
                   </span>
                 </td>
-                <td>{{ customer.createdAt | date: 'dd/MM/yyyy' }}</td>
                 <td>
                   <div class="admin-table__actions">
+                    <button 
+                      class="btn-icon" 
+                      [class.btn-icon--active]="customer.status === 'ACTIVE'"
+                      [class.btn-icon--inactive]="customer.status !== 'ACTIVE'"
+                      (click)="toggleCustomerStatus(customer)" 
+                      [title]="customer.status === 'ACTIVE' ? 'Desactivar cliente' : 'Activar cliente'">
+                      <svg *ngIf="customer.status === 'ACTIVE'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                      </svg>
+                      <svg *ngIf="customer.status !== 'ACTIVE'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                     <button class="btn-icon" [routerLink]="['/admin/customers', customer.id]" title="Ver detalles">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -287,6 +300,24 @@ import { CustomerService, Customer } from '../../customer.service';
       color: var(--admin-primary);
     }
 
+    .btn-icon--active {
+      color: #10b981;
+    }
+
+    .btn-icon--active:hover {
+      background: #10b98120;
+      color: #10b981;
+    }
+
+    .btn-icon--inactive {
+      color: #ef4444;
+    }
+
+    .btn-icon--inactive:hover {
+      background: #ef444420;
+      color: #ef4444;
+    }
+
     .admin-card__empty {
       text-align: center;
       padding: 3rem;
@@ -359,6 +390,28 @@ export class AdminCustomerListComponent implements OnInit {
     // Implementar lógica de exportación CSV/Excel
     const csvContent = this.generateCSV();
     this.downloadCSV(csvContent, 'clientes.csv');
+  }
+
+  toggleCustomerStatus(customer: Customer): void {
+    const newStatus = customer.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    const updatedCustomer = { ...customer, status: newStatus };
+    
+    this.customerService.updateCustomer(customer.id, updatedCustomer).subscribe({
+      next: (updated) => {
+        console.log('✅ Estado del cliente actualizado:', updated);
+        // Actualizar en la lista local
+        const index = this.customers.findIndex(c => c.id === customer.id);
+        if (index !== -1) {
+          this.customers[index] = updated;
+        }
+        // Re-aplicar filtros
+        this.filterCustomers();
+      },
+      error: (err) => {
+        console.error('❌ Error actualizando estado del cliente:', err);
+        alert('Error al actualizar el estado del cliente');
+      }
+    });
   }
 
   private generateCSV(): string {

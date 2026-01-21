@@ -1,34 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DiscountService, DiscountRule } from '../../services/discount.service';
 
 /**
  * Estrategias de descuento disponibles en el sistema
  */
 enum DiscountStrategy {
+  LOYALTY = 'LOYALTY',                 // Descuento por lealtad
+  SEASON = 'SEASON',                   // Descuento estacional
+  PRODUCT_TYPE = 'PRODUCT_TYPE',       // Descuento por tipo de producto
   PERCENTAGE = 'PERCENTAGE',           // Descuento por porcentaje
   FIXED_AMOUNT = 'FIXED_AMOUNT',       // Descuento de monto fijo
   BUY_X_GET_Y = 'BUY_X_GET_Y',        // Compra X lleva Y
   BUNDLE = 'BUNDLE',                   // Descuento por paquete
-  SEASONAL = 'SEASONAL',               // Descuento estacional
-  FIRST_PURCHASE = 'FIRST_PURCHASE',   // Descuento primera compra
-  LOYALTY = 'LOYALTY'                  // Descuento por lealtad
-}
-
-interface DiscountRule {
-  id: string;
-  name: string;
-  description: string;
-  strategy: DiscountStrategy;
-  value: number;
-  minPurchase?: number;
-  maxDiscount?: number;
-  startDate: Date;
-  endDate?: Date;
-  active: boolean;
-  usageCount: number;
-  maxUsage?: number;
+  FIRST_PURCHASE = 'FIRST_PURCHASE'    // Descuento primera compra
 }
 
 @Component({
@@ -328,7 +315,7 @@ interface DiscountRule {
       color: #8b5cf6;
     }
 
-    .strategy-badge[data-strategy="SEASONAL"] {
+    .strategy-badge[data-strategy="SEASON"] {
       background: #ec489933;
       color: #ec4899;
     }
@@ -422,18 +409,23 @@ interface DiscountRule {
   `]
 })
 export class AdminDiscountListComponent implements OnInit {
+  private readonly discountService = inject(DiscountService);
+  
   rules: DiscountRule[] = [];
   filteredRules: DiscountRule[] = [];
   filterStrategy = '';
+  loading = false;
+  error: string | null = null;
 
   strategies = [
-    { name: 'Porcentaje', description: 'Descuento basado en porcentaje del total', count: 0, key: DiscountStrategy.PERCENTAGE },
-    { name: 'Monto Fijo', description: 'Descuento de valor fijo en pesos', count: 0, key: DiscountStrategy.FIXED_AMOUNT },
-    { name: 'Compra X Lleva Y', description: 'Promociones 2x1, 3x2, etc.', count: 0, key: DiscountStrategy.BUY_X_GET_Y },
-    { name: 'Paquete', description: 'Descuento al comprar productos juntos', count: 0, key: DiscountStrategy.BUNDLE },
-    { name: 'Estacional', description: 'Descuentos por temporada o fechas especiales', count: 0, key: DiscountStrategy.SEASONAL },
-    { name: 'Primera Compra', description: 'Beneficio para nuevos clientes', count: 0, key: DiscountStrategy.FIRST_PURCHASE },
-    { name: 'Lealtad', description: 'Recompensas para clientes frecuentes', count: 0, key: DiscountStrategy.LOYALTY }
+    { name: 'Lealtad', description: 'Descuentos por nivel de cliente (Bronce, Plata, Oro, VIP)', count: 0, key: 'LOYALTY' },
+    { name: 'Estacional', description: 'Descuentos por temporada (Verano, Invierno, etc.)', count: 0, key: 'SEASON' },
+    { name: 'Tipo de Producto', description: 'Descuentos por categoría (Electrónicos, Ropa, Alimentos)', count: 0, key: 'PRODUCT_TYPE' },
+    { name: 'Porcentaje', description: 'Descuento basado en porcentaje del total', count: 0, key: 'PERCENTAGE' },
+    { name: 'Monto Fijo', description: 'Descuento de valor fijo en pesos', count: 0, key: 'FIXED_AMOUNT' },
+    { name: 'Compra X Lleva Y', description: 'Promociones 2x1, 3x2, etc.', count: 0, key: 'BUY_X_GET_Y' },
+    { name: 'Paquete', description: 'Descuento al comprar productos juntos', count: 0, key: 'BUNDLE' },
+    { name: 'Primera Compra', description: 'Beneficio para nuevos clientes', count: 0, key: 'FIRST_PURCHASE' }
   ];
 
   ngOnInit(): void {
@@ -441,96 +433,29 @@ export class AdminDiscountListComponent implements OnInit {
   }
 
   loadRules(): void {
-    // Mock data - en producción, esto vendría del backend con el Strategy Pattern implementado
-    this.rules = [
-      {
-        id: '1',
-        name: 'Black Friday 2024',
-        description: 'Descuento especial por Black Friday en toda la tienda',
-        strategy: DiscountStrategy.PERCENTAGE,
-        value: 30,
-        minPurchase: 100000,
-        startDate: new Date('2024-11-25'),
-        endDate: new Date('2024-11-29'),
-        active: true,
-        usageCount: 245,
-        maxUsage: 1000
+    this.loading = true;
+    this.error = null;
+    
+    this.discountService.getAll().subscribe({
+      next: (rules) => {
+        this.rules = rules.map(rule => ({
+          ...rule,
+          startDate: rule.startDate,
+          endDate: rule.endDate
+        }));
+        this.updateStrategyCounts();
+        this.filteredRules = [...this.rules];
+        this.loading = false;
       },
-      {
-        id: '2',
-        name: 'Descuento Primera Compra',
-        description: 'Bienvenida para nuevos clientes',
-        strategy: DiscountStrategy.FIRST_PURCHASE,
-        value: 15,
-        startDate: new Date('2024-01-01'),
-        active: true,
-        usageCount: 87
-      },
-      {
-        id: '3',
-        name: '2x1 en Electrónica',
-        description: 'Compra 2 productos de electrónica y lleva el segundo gratis',
-        strategy: DiscountStrategy.BUY_X_GET_Y,
-        value: 50,
-        minPurchase: 200000,
-        startDate: new Date('2024-01-15'),
-        endDate: new Date('2024-02-15'),
-        active: true,
-        usageCount: 156,
-        maxUsage: 500
-      },
-      {
-        id: '4',
-        name: 'Bundle Hogar',
-        description: 'Descuento al comprar productos del hogar juntos',
-        strategy: DiscountStrategy.BUNDLE,
-        value: 20,
-        minPurchase: 300000,
-        startDate: new Date('2023-12-01'),
-        active: true,
-        usageCount: 92
-      },
-      {
-        id: '5',
-        name: 'Navidad 2024',
-        description: 'Descuento estacional por temporada navideña',
-        strategy: DiscountStrategy.SEASONAL,
-        value: 25,
-        minPurchase: 150000,
-        maxDiscount: 100000,
-        startDate: new Date('2024-12-15'),
-        endDate: new Date('2024-12-31'),
-        active: false,
-        usageCount: 0,
-        maxUsage: 2000
-      },
-      {
-        id: '6',
-        name: 'Cliente VIP',
-        description: 'Descuento permanente para clientes leales',
-        strategy: DiscountStrategy.LOYALTY,
-        value: 10,
-        startDate: new Date('2024-01-01'),
-        active: true,
-        usageCount: 312
-      },
-      {
-        id: '7',
-        name: 'Cupón $50.000',
-        description: 'Descuento fijo en compras superiores a $200.000',
-        strategy: DiscountStrategy.FIXED_AMOUNT,
-        value: 50000,
-        minPurchase: 200000,
-        startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-12-31'),
-        active: true,
-        usageCount: 423,
-        maxUsage: 1000
+      error: (err) => {
+        console.error('Error loading discount rules:', err);
+        this.error = 'Error al cargar las reglas de descuento. Por favor, intente nuevamente.';
+        this.loading = false;
+        // Fallback a datos vacíos en caso de error
+        this.rules = [];
+        this.filteredRules = [];
       }
-    ];
-
-    this.updateStrategyCounts();
-    this.filteredRules = [...this.rules];
+    });
   }
 
   updateStrategyCounts(): void {
@@ -557,7 +482,7 @@ export class AdminDiscountListComponent implements OnInit {
       [DiscountStrategy.FIXED_AMOUNT]: 'Monto Fijo',
       [DiscountStrategy.BUY_X_GET_Y]: 'Compra X Lleva Y',
       [DiscountStrategy.BUNDLE]: 'Paquete',
-      [DiscountStrategy.SEASONAL]: 'Estacional',
+      [DiscountStrategy.SEASON]: 'Estacional',
       [DiscountStrategy.FIRST_PURCHASE]: 'Primera Compra',
       [DiscountStrategy.LOYALTY]: 'Lealtad'
     };
@@ -568,7 +493,7 @@ export class AdminDiscountListComponent implements OnInit {
     if (rule.strategy === DiscountStrategy.PERCENTAGE || 
         rule.strategy === DiscountStrategy.BUY_X_GET_Y ||
         rule.strategy === DiscountStrategy.BUNDLE ||
-        rule.strategy === DiscountStrategy.SEASONAL ||
+        rule.strategy === DiscountStrategy.SEASON ||
         rule.strategy === DiscountStrategy.FIRST_PURCHASE ||
         rule.strategy === DiscountStrategy.LOYALTY) {
       return `${rule.value}%`;
@@ -578,9 +503,20 @@ export class AdminDiscountListComponent implements OnInit {
   }
 
   toggleActive(rule: DiscountRule): void {
+    const previousState = rule.active;
     rule.active = !rule.active;
-    this.updateStrategyCounts();
-    console.log(`Regla ${rule.name} ${rule.active ? 'activada' : 'desactivada'}`);
+    
+    this.discountService.toggleStatus(rule.id).subscribe({
+      next: () => {
+        console.log('Rule status toggled:', rule.name, rule.active);
+        this.updateStrategyCounts();
+      },
+      error: (err) => {
+        console.error('Error toggling rule status:', err);
+        rule.active = previousState; // Revertir en caso de error
+        alert('Error al cambiar el estado de la regla. Por favor, intente nuevamente.');
+      }
+    });
   }
 
   createDiscount(): void {
@@ -592,11 +528,19 @@ export class AdminDiscountListComponent implements OnInit {
   }
 
   deleteRule(rule: DiscountRule): void {
-    if (confirm(`¿Eliminar la regla "${rule.name}"?`)) {
-      this.rules = this.rules.filter(r => r.id !== rule.id);
-      this.filterDiscounts();
-      this.updateStrategyCounts();
-      console.log('Regla eliminada');
+    if (confirm(`¿Está seguro de eliminar la regla "${rule.name}"?`)) {
+      this.discountService.delete(rule.id).subscribe({
+        next: () => {
+          this.rules = this.rules.filter(r => r.id !== rule.id);
+          this.filterDiscounts();
+          this.updateStrategyCounts();
+          console.log('Rule deleted:', rule.name);
+        },
+        error: (err) => {
+          console.error('Error deleting rule:', err);
+          alert('Error al eliminar la regla. Por favor, intente nuevamente.');
+        }
+      });
     }
   }
 }
