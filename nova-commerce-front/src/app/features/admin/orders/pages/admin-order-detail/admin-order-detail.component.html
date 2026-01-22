@@ -1,12 +1,21 @@
 <div class="order-detail-page">
   <div *ngIf="(state$ | async) as state" class="order-detail-container">
     <ng-container *ngIf="state.selectedOrder as order">
-      <!-- Header -->
+      <!-- Header with Back Button -->
       <div class="order-header">
+        <div class="order-header__top">
+          <button class="back-button" routerLink="/admin/orders">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Volver a Pedidos
+          </button>
+        </div>
         <div class="order-header__info">
-          <h2 class="order-header__title">Orden #{{ order.id }}</h2>
+          <h2 class="order-header__title">Orden #{{ order.orderNumber || order.id.slice(-8) }}</h2>
           <span class="order-status-badge" [class]="'status--' + order.status.toLowerCase()">
-            {{ order.status }}
+            {{ getStatusLabel(order.status) }}
           </span>
         </div>
         <div class="order-header__meta">
@@ -32,13 +41,44 @@
             <h3>Cliente</h3>
           </div>
           <div class="card-content">
-            <p class="card-label">ID Cliente</p>
-            <p class="card-value">{{ order.customerId }}</p>
+            <div class="info-row">
+              <span class="info-label">Nombre:</span>
+              <span class="info-value">{{ order.customerName || 'No especificado' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value">{{ order.customerEmail || 'No especificado' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Teléfono:</span>
+              <span class="info-value">{{ order.customerPhone || 'No especificado' }}</span>
+            </div>
+            <div class="info-row" *ngIf="order.shippingAddress">
+              <span class="info-label">Dirección:</span>
+              <span class="info-value">{{ order.shippingAddress }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Info Card -->
+        <div class="order-card">
+          <div class="card-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            <h3>Pago</h3>
+          </div>
+          <div class="card-content">
+            <div class="info-row">
+              <span class="info-label">Método de Pago:</span>
+              <span class="info-value payment-method">{{ order.paymentMethod || 'No especificado' }}</span>
+            </div>
           </div>
         </div>
 
         <!-- Pricing Summary Card -->
-        <div class="order-card">
+        <div class="order-card order-card--full">
           <div class="card-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -49,15 +89,37 @@
           <div class="card-content">
             <div class="price-row">
               <span class="price-label">Subtotal:</span>
-              <span class="price-value">{{ order.totalBeforeDiscount | currency:'USD':'symbol':'1.0-0' }}</span>
+              <span class="price-value">${{ order.totalBeforeDiscount | number: '1.0-0' }}</span>
             </div>
-            <div class="price-row price-row--discount">
+            <div class="price-row price-row--discount" *ngIf="order.discountTotal > 0">
               <span class="price-label">Descuento:</span>
-              <span class="price-value">-{{ order.discountTotal | currency:'USD':'symbol':'1.0-0' }}</span>
+              <span class="price-value">-${{ order.discountTotal | number: '1.0-0' }}</span>
             </div>
             <div class="price-row price-row--total">
               <span class="price-label">Total Final:</span>
-              <span class="price-value">{{ order.totalAfterDiscount | currency:'USD':'symbol':'1.0-0' }}</span>
+              <span class="price-value">${{ order.totalAfterDiscount | number: '1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discounts Card -->
+      <div class="order-card order-card--full" *ngIf="order.discounts && order.discounts.length > 0">
+        <div class="card-header">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+          </svg>
+          <h3>Descuentos Aplicados</h3>
+        </div>
+        <div class="card-content">
+          <div class="discounts-list">
+            <div class="discount-row" *ngFor="let discount of order.discounts">
+              <div class="discount-info">
+                <div class="discount-type">{{ getDiscountTypeLabel(discount.type) }}</div>
+                <div class="discount-percentage">{{ discount.percentage }}% de descuento</div>
+              </div>
+              <div class="discount-amount">-${{ discount.amount | number: '1.0-0' }}</div>
             </div>
           </div>
         </div>
@@ -78,9 +140,13 @@
             <div class="item-row" *ngFor="let item of order.items">
               <div class="item-info">
                 <div class="item-name">{{ item.productName }}</div>
-                <div class="item-quantity">Cantidad: {{ item.quantity }}</div>
+                <div class="item-details">
+                  <span class="item-quantity">Cantidad: {{ item.quantity }}</span>
+                  <span class="item-separator">•</span>
+                  <span class="item-unit-price">Precio unitario: ${{ item.unitPrice | number: '1.0-0' }}</span>
+                </div>
               </div>
-              <div class="item-price">{{ item.subTotal | currency:'USD':'symbol':'1.0-0' }}</div>
+              <div class="item-price">${{ item.subTotal | number: '1.0-0' }}</div>
             </div>
           </div>
         </div>
@@ -96,13 +162,13 @@
         </div>
         <div class="card-content">
           <div class="action-buttons">
-            <button class="action-btn action-btn--paid" (click)="updateStatus('PAID')" [disabled]="order.status === 'PAID'">
+            <button class="action-btn action-btn--paid" (click)="updateStatus('PAID')" [disabled]="order.status === 'PAID' || order.status === 'SHIPPED' || order.status === 'COMPLETED'">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
               Marcar como PAGADO
             </button>
-            <button class="action-btn action-btn--shipped" (click)="updateStatus('SHIPPED')" [disabled]="order.status === 'SHIPPED' || order.status === 'COMPLETED'">
+            <button class="action-btn action-btn--shipped" (click)="updateStatus('SHIPPED')" [disabled]="order.status === 'CREATED' || order.status === 'SHIPPED' || order.status === 'COMPLETED'">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="1" y="3" width="15" height="13"></rect>
                 <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
@@ -111,7 +177,7 @@
               </svg>
               Marcar como ENVIADO
             </button>
-            <button class="action-btn action-btn--completed" (click)="updateStatus('COMPLETED')" [disabled]="order.status === 'COMPLETED'">
+            <button class="action-btn action-btn--completed" (click)="updateStatus('COMPLETED')" [disabled]="order.status === 'CREATED' || order.status === 'PAID' || order.status === 'COMPLETED'">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>

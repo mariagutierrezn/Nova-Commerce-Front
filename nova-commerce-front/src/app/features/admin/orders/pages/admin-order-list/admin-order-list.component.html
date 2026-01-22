@@ -32,7 +32,7 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Cliente ID</th>
+            <th>Cliente</th>
             <th>Estado</th>
             <th>Total</th>
             <th>Acciones</th>
@@ -40,11 +40,11 @@
         </thead>
         <tbody>
           <tr *ngFor="let o of filteredOrders(state.orders)">
-            <td><strong>#{{ o.id }}</strong></td>
-            <td>{{ o.customerId }}</td>
+            <td><strong>#{{ o.orderNumber || o.id.slice(-8) }}</strong></td>
+            <td>{{ o.customerName || 'Cliente ' + o.customerId.slice(-4) }}</td>
             <td>
               <span class="badge" [ngClass]="'badge--' + o.status.toLowerCase()">
-                {{ o.status }}
+                {{ getStatusLabel(o.status) }}
               </span>
             </td>
             <td>{{ o.totalAfterDiscount | currency:'USD':'symbol':'1.0-0' }}</td>

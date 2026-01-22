@@ -3,8 +3,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AdminOrderFacade } from '../../admin-order.facade';
-import type { AdminOrderState } from '../../admin-order.facade';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-admin-order-list',
@@ -14,7 +12,7 @@ import { Observable } from 'rxjs';
   styleUrls: ['./admin-order-list.component.scss'],
 })
 export class AdminOrderListComponent implements OnInit {
-  private facade = inject(AdminOrderFacade);
+  private readonly facade = inject(AdminOrderFacade);
   state$ = this.facade.state$;
   status: 'ALL' | 'CREATED' | 'PAID' | 'SHIPPED' | 'COMPLETED' = 'ALL';
 
@@ -32,5 +30,15 @@ export class AdminOrderListComponent implements OnInit {
       return orders;
     }
     return orders.filter(o => o.status === this.status);
+  }
+
+  getStatusLabel(status: string): string {
+    const labels: Record<string, string> = {
+      CREATED: 'Creada',
+      PAID: 'Pagada',
+      SHIPPED: 'Enviada',
+      COMPLETED: 'Completada',
+    };
+    return labels[status] || status;
   }
 }
