@@ -10,11 +10,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OrderFacade } from '../../services/order.facade';
+import { OrderDetailModalComponent } from '../../components/order-detail-modal/order-detail-modal.component';
+import { Order } from '../../models/order.model';
 
 @Component({
   selector: 'app-order-history',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, OrderDetailModalComponent],
   template: `
     <div class="order-history">
       <div class="order-history__header">
@@ -73,11 +75,19 @@ import { OrderFacade } from '../../services/order.facade';
             <h4 class="order-card__items-title">Artículos ({{ order.items.length }})</h4>
             <div class="order-item" *ngFor="let item of order.items">
               <div class="order-item__image">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
+                <img 
+                  *ngIf="item.imageUrl" 
+                  [src]="item.imageUrl" 
+                  [alt]="item.productName || item.name"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                />
+                <div class="order-item__image-placeholder">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                </div>
               </div>
               <div class="order-item__details">
                 <p class="order-item__name">{{ item.productName || item.name }}</p>
@@ -98,6 +108,14 @@ import { OrderFacade } from '../../services/order.facade';
               <span class="discount-text">Descuento:</span>
               <span class="discount-text">-{{ order.discountTotal | currency:'USD':'symbol':'1.0-0' }}</span>
             </div>
+            <!-- Mostrar tipos de descuentos aplicados -->
+            <div class="discount-types" *ngIf="order.discounts && order.discounts.length > 0">
+              <div class="discount-badge" *ngFor="let discount of order.discounts">
+                <span class="discount-icon">{{ getDiscountIcon(discount.type) }}</span>
+                <span class="discount-label">{{ getDiscountLabel(discount.type) }}</span>
+                <span class="discount-percentage">-{{ discount.percentage }}%</span>
+              </div>
+            </div>
             <div class="summary-row summary-row--total">
               <span>Total:</span>
               <span class="total-price">{{ order.totalAfterDiscount | currency:'USD':'symbol':'1.0-0' }}</span>
@@ -111,6 +129,13 @@ import { OrderFacade } from '../../services/order.facade';
           </div>
         </div>
       </div>
+
+      <!-- Modal de Detalles -->
+      <app-order-detail-modal
+        [order]="selectedOrder"
+        [isOpen]="isModalOpen"
+        (close)="closeModal()"
+      ></app-order-detail-modal>
     </div>
   `,
   styles: `
@@ -307,17 +332,29 @@ import { OrderFacade } from '../../services/order.facade';
     }
 
     .order-item__image {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       border-radius: 6px;
       overflow: hidden;
       background: white;
+      position: relative;
     }
 
     .order-item__image img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
+    }
+
+    .order-item__image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e0;
+      background: #f8fafc;
     }
 
     .order-item__details {
@@ -376,6 +413,38 @@ import { OrderFacade } from '../../services/order.facade';
     .discount-text {
       color: #ef4444;
       font-weight: 600;
+    }
+
+    .discount-types {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .discount-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+
+    .discount-icon {
+      font-size: 1rem;
+    }
+
+    .discount-label {
+      font-weight: 600;
+    }
+
+    .discount-percentage {
+      color: #dc2626;
+      font-weight: 700;
     }
 
     .order-card__actions {
@@ -446,6 +515,9 @@ import { OrderFacade } from '../../services/order.facade';
   `
 })
 export class OrderHistoryComponent implements OnInit {
+  selectedOrder: Order | null = null;
+  isModalOpen = false;
+
   constructor(public facade: OrderFacade) {
     // Suscribirse a los observables para debug
     this.facade.orders$.subscribe(orders => {
@@ -473,9 +545,15 @@ export class OrderHistoryComponent implements OnInit {
     this.facade.loadOrderById(order.id);
   }
 
-  viewOrderDetails(order: any): void {
+  viewOrderDetails(order: Order): void {
     console.log('📋 Viendo detalles de orden:', order);
-    alert(`Detalles de la orden #${order.id.toString().slice(-8)}\n\nEstado: ${this.getStatusLabel(order.status)}\nTotal: $${order.totalAfterDiscount.toFixed(2)}`);
+    this.selectedOrder = order;
+    this.isModalOpen = true;
+  }
+
+  closeModal(): void {
+    this.isModalOpen = false;
+    this.selectedOrder = null;
   }
 
   getStatusLabel(status: string): string {
@@ -486,5 +564,25 @@ export class OrderHistoryComponent implements OnInit {
       COMPLETED: 'Completada',
     };
     return labels[status] || status;
+  }
+
+  getDiscountLabel(type: string): string {
+    const labels: Record<string, string> = {
+      LOYALTY: 'Descuento de Fidelidad',
+      PRODUCT: 'Descuento del Producto',
+      SEASON: 'Oferta de Temporada',
+      FIRST_PURCHASE: 'Primera Compra',
+      OTHER: 'Descuento Especial'
+    };
+    return labels[type] || 'Descuento';
+  }
+
+  getDiscountIcon(type: string): string {
+    const icons: Record<string, string> = {
+      LOYALTY: '🎖️',
+      PRODUCT: '🏷️',
+      SEASON: '🎉',
+    };
+    return icons[type] || '💰';
   }
 }

@@ -14,6 +14,7 @@ export interface OrderItem {
   quantity: number;
   subtotal?: number;
   productType?: string | null;
+  imageUrl?: string;
 }
 
 export interface Discount {
