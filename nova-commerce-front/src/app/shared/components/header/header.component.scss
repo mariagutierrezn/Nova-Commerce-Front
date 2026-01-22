@@ -37,8 +37,8 @@
   }
 
   &__logo-img {
-    width: 132px;
-    height: 34px;
+    width: 180px;
+    height: 48px;
     object-fit: contain;
     display: block;
   }
@@ -63,9 +63,9 @@
   &__nav-link {
     color: var(--user-text-secondary);
     text-decoration: none;
-    font-size: var(--text-sm);
+    font-size: 1.125rem;
     font-weight: var(--font-medium);
-    padding: var(--spacing-xs) 0;
+    padding: var(--spacing-sm) 0;
     transition: color var(--transition-fast);
     display: flex;
     align-items: center;
@@ -131,8 +131,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
     background: transparent;
     border: none;
     border-radius: var(--radius-md);
@@ -158,9 +158,9 @@
     background: var(--user-primary);
     color: #ffffff;
     border: none;
-    padding: 0.625rem 1.25rem;
+    padding: 0.875rem 1.75rem;
     border-radius: var(--radius-md);
-    font-size: var(--text-sm);
+    font-size: 1.0625rem;
     font-weight: var(--font-semibold);
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -178,8 +178,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 52px;
+    height: 52px;
     background: transparent;
     border: 1px solid #e2e8f0;
     border-radius: var(--radius-md);
