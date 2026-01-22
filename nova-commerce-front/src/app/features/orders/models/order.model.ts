@@ -27,6 +27,9 @@ export interface Order {
   id: string | number;
   customerId?: number;
   userId?: string;
+  customerPhone?: string;
+  shippingAddress?: string;
+  paymentMethod?: string;
   items: OrderItem[];
   totalBeforeDiscount: number;
   discountTotal?: number;
@@ -39,6 +42,9 @@ export interface Order {
 
 export interface CreateOrderRequest {
   customerId: string; // Backend espera String @NotNull
+  customerPhone?: string;
+  shippingAddress?: string;
+  paymentMethod?: string;
   items: OrderItem[];
 }
 
@@ -47,4 +53,26 @@ export interface OrdersResponse {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface DiscountPreviewRequest {
+  customerId: string;
+  items: {
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+}
+
+export interface DiscountPreviewResponse {
+  subtotal: number;
+  totalDiscount: number;
+  total: number;
+  discounts: {
+    type: string;
+    label: string;
+    description: string;
+    percentage: number;
+    amount: number;
+  }[];
 }

@@ -214,6 +214,35 @@
   font-weight: 600;
 }
 
+.confirmation__discounts {
+  margin: 16px 0;
+  padding: 12px;
+  background: #e8f5e9;
+  border-radius: 6px;
+  border-left: 4px solid #4caf50;
+}
+
+.confirmation__discount-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.confirmation__discount-label {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.confirmation__discount-amount {
+  color: #4caf50;
+  font-weight: 700;
+}
+
 .confirmation__dates {
   background: #f8f9fa;
   padding: 16px;

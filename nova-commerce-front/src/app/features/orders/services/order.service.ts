@@ -19,6 +19,8 @@ import type {
   Order,
   CreateOrderRequest,
   OrdersResponse,
+  DiscountPreviewRequest,
+  DiscountPreviewResponse,
 } from '../models/order.model';
 
 @Injectable({
@@ -94,5 +96,14 @@ export class OrderService {
    */
   getOrderById(id: string): Observable<Order> {
     return this.http.get<Order>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Calcula un preview de los descuentos que se aplicarían a una orden
+   * @param request - Datos del cliente e items
+   * @returns Observable con los descuentos calculados
+   */
+  getDiscountPreview(request: DiscountPreviewRequest): Observable<DiscountPreviewResponse> {
+    return this.http.post<DiscountPreviewResponse>(`${this.apiUrl}/discount-preview`, request);
   }
 }

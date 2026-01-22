@@ -56,8 +56,9 @@ export class OrderFacade {
   /**
    * Crea una nueva orden
    * @param items - Items a ordenar
+   * @param checkoutData - Datos adicionales: phone, address, paymentMethod
    */
-  createOrder(items: any[]): void {
+  createOrder(items: any[], checkoutData?: any): void {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
@@ -91,6 +92,9 @@ export class OrderFacade {
 
     const request: CreateOrderRequest = {
       customerId: customerId, // Ya está como String
+      customerPhone: checkoutData?.customerPhone,
+      shippingAddress: checkoutData?.shippingAddress,
+      paymentMethod: checkoutData?.paymentMethod,
       items,
     };
 

@@ -11,6 +11,8 @@ import { Router, RouterLink } from '@angular/router';
 import { CartFacade } from '../../services/cart.facade';
 import { CartItemComponent } from '../../components/cart-item/cart-item.component';
 import { CartSummaryComponent } from '../../components/cart-summary/cart-summary.component';
+import { CheckoutModalComponent } from '../../components/checkout-modal/checkout-modal.component';
+import { CartItem } from '../../models/cart.model';
 
 @Component({
   selector: 'app-cart-page',
@@ -20,6 +22,7 @@ import { CartSummaryComponent } from '../../components/cart-summary/cart-summary
     RouterLink,
     CartItemComponent,
     CartSummaryComponent,
+    CheckoutModalComponent,
   ],
   template: `
     <div class="cart-page">
@@ -70,10 +73,19 @@ import { CartSummaryComponent } from '../../components/cart-summary/cart-summary
             [totalItems]="(totalItems$ | async) ?? 0"
             [totalAmount]="(totalAmount$ | async) ?? 0"
             [isLoading]="isCheckoutLoading"
-            (checkout)="onCheckout()"
+            (checkout)="onOpenCheckoutModal()"
           ></app-cart-summary>
         </div>
       </ng-template>
+
+      <!-- Checkout Modal -->
+      <app-checkout-modal
+        [isOpen]="isCheckoutModalOpen"
+        [items]="currentItems"
+        [totalAmount]="currentTotalAmount"
+        (close)="onCloseCheckoutModal()"
+        (confirm)="onConfirmCheckout($event)"
+      ></app-checkout-modal>
     </div>
   `,
   styles: `
@@ -172,8 +184,8 @@ import { CartSummaryComponent } from '../../components/cart-summary/cart-summary
   `,
 })
 export class CartPageComponent implements OnInit {
-  private cartFacade = inject(CartFacade);
-  private router = inject(Router);
+  private readonly cartFacade = inject(CartFacade);
+  private readonly router = inject(Router);
 
   items$ = this.cartFacade.items$;
   totalItems$ = this.cartFacade.totalItems$;
@@ -181,9 +193,14 @@ export class CartPageComponent implements OnInit {
   isEmpty$ = this.cartFacade.isEmpty$;
 
   isCheckoutLoading = false;
+  isCheckoutModalOpen = false;
+  currentItems: CartItem[] = [];
+  currentTotalAmount = 0;
 
   ngOnInit(): void {
-    // Facade se inicializa automáticamente
+    // Suscribirse a cambios del carrito para tener datos actualizados
+    this.items$.subscribe(items => this.currentItems = items);
+    this.totalAmount$.subscribe(amount => this.currentTotalAmount = amount);
   }
 
   onQuantityChanged(productId: string, quantity: number): void {
@@ -194,15 +211,24 @@ export class CartPageComponent implements OnInit {
     this.cartFacade.removeItem(productId);
   }
 
-  onCheckout(): void {
+  onOpenCheckoutModal(): void {
+    this.isCheckoutModalOpen = true;
+  }
+
+  onCloseCheckoutModal(): void {
+    this.isCheckoutModalOpen = false;
+  }
+
+  onConfirmCheckout(checkoutData: any): void {
+    this.isCheckoutModalOpen = false;
     this.isCheckoutLoading = true;
     try {
-      this.cartFacade.checkout();
+      this.cartFacade.checkout(checkoutData);
       // Navegar a la página de confirmación de orden
       setTimeout(() => {
         this.isCheckoutLoading = false;
         this.router.navigate(['/orders/create']);
-      }, 1000);
+      }, 500); // Reducido de 1000ms a 500ms
     } catch (error) {
       console.error('Error during checkout:', error);
       this.isCheckoutLoading = false;
