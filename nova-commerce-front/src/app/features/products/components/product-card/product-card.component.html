@@ -1,65 +1,55 @@
-<article class="product-card">
-  <div class="product-card__link" [routerLink]="['/products', product().id]">
-    <div class="product-card__image-container">
-      <img
-        [src]="product().imageUrl"
-        [alt]="product().name"
-        class="product-card__image"
-        loading="lazy"
-      />
-      @if (product(); as p) {
-        @if (!p.stockQuantity || p.stockQuantity === 0) {
-          <span class="product-card__badge product-card__badge--out-of-stock">Sin stock</span>
-        }
-      }
-    </div>
-
-    <div class="product-card__content">
-      <h3 class="product-card__title">{{ product().name }}</h3>
-
-      <p class="product-card__description">{{ product().description }}</p>
-
-      <div class="product-card__footer">
-        <div class="product-card__pricing">
-          @if (product().hasDiscount && product().discountPercentage) {
-            <span class="product-card__price--original">{{ product().price | currency:'USD':'symbol':'1.0-0' }}</span>
-            <span class="product-card__price">{{ product().price * (1 - (product().discountPercentage || 0) / 100) | currency:'USD':'symbol':'1.0-0' }}</span>
-            <span class="product-card__discount-badge">-{{ product().discountPercentage }}%</span>
-          } @else {
-            <span class="product-card__price">{{ product().price | currency:'USD':'symbol':'1.0-0' }}</span>
-          }
-        </div>
-
-        @if (product(); as p) {
-          @if (p.stockQuantity && p.stockQuantity > 0 && p.stockQuantity <= 5) {
-            <span class="product-card__stock product-card__stock--low">
-              ¡Solo quedan {{ p.stockQuantity }}!
-            </span>
-          }
-        }
+<article class="product-card" (click)="onCardClick()">
+  <div class="product-card__image-container">
+    <img
+      [src]="product().imageUrl"
+      [alt]="product().name"
+      class="product-card__image"
+      loading="lazy"
+    />
+    
+    <!-- Badge de descuento en la esquina -->
+    @if (product().hasDiscount && product().discountPercentage) {
+      <div class="product-card__badge">
+        -{{ product().discountPercentage }}%
       </div>
-    </div>
+    }
   </div>
 
-  <div class="product-card__actions">
-    <button
-      class="btn btn--secondary"
-      [routerLink]="['/products', product().id]"
-      type="button"
-    >
-      Ver Detalles
-    </button>
-    <button
-      class="btn btn--tertiary"
-      [disabled]="!product().stockQuantity || product().stockQuantity === 0 || isAdding"
-      (click)="onAddToCart()"
-      type="button"
-    >
-      @if (!isAdding) {
-        {{ (product().stockQuantity || 0) > 0 ? 'Agregar' : 'Sin Stock' }}
-      } @else {
-        Agregando...
+  <div class="product-card__content">
+    <h3 class="product-card__name">{{ product().name }}</h3>
+    <p class="product-card__description">{{ product().description }}</p>
+
+    <!-- Precios -->
+    <div class="product-card__pricing">
+      <span class="product-card__price-current">${{ product().price | number: '1.0-0' }}</span>
+      @if (product().hasDiscount && product().discountPercentage) {
+        <span class="product-card__price-original">
+          ${{ (product().price / (1 - (product().discountPercentage || 0) / 100)) | number: '1.0-0' }}
+        </span>
       }
-    </button>
+    </div>
+
+    <!-- Acciones -->
+    <div class="product-card__actions">
+      <button
+        class="btn btn--secondary"
+        (click)="onViewDetails($event)"
+        type="button"
+      >
+        Ver Detalles
+      </button>
+      <button
+        class="btn btn--tertiary"
+        [disabled]="!product().stockQuantity || product().stockQuantity === 0 || isAdding"
+        (click)="onAddToCart($event)"
+        type="button"
+      >
+        @if (!isAdding) {
+          {{ (product().stockQuantity || 0) > 0 ? 'Agregar' : 'Sin Stock' }}
+        } @else {
+          Agregando...
+        }
+      </button>
+    </div>
   </div>
 </article>
