@@ -8,7 +8,7 @@
         loading="lazy"
       />
       @if (product(); as p) {
-        @if (!p.stock || p.stock === 0) {
+        @if (!p.stockQuantity || p.stockQuantity === 0) {
           <span class="product-card__badge product-card__badge--out-of-stock">Sin stock</span>
         }
       }
@@ -31,9 +31,9 @@
         </div>
 
         @if (product(); as p) {
-          @if (p.stock && p.stock > 0 && p.stock <= 5) {
+          @if (p.stockQuantity && p.stockQuantity > 0 && p.stockQuantity <= 5) {
             <span class="product-card__stock product-card__stock--low">
-              ¡Solo quedan {{ p.stock }}!
+              ¡Solo quedan {{ p.stockQuantity }}!
             </span>
           }
         }
@@ -43,13 +43,23 @@
 
   <div class="product-card__actions">
     <button
-      class="product-card__btn-cart"
-      [disabled]="!product().stock || product().stock === 0 || isAdding"
+      class="btn btn--secondary"
+      [routerLink]="['/products', product().id]"
+      type="button"
+    >
+      Ver Detalles
+    </button>
+    <button
+      class="btn btn--tertiary"
+      [disabled]="!product().stockQuantity || product().stockQuantity === 0 || isAdding"
       (click)="onAddToCart()"
       type="button"
     >
-      <span *ngIf="!isAdding">Agregar al carrito</span>
-      <span *ngIf="isAdding">Agregando...</span>
+      @if (!isAdding) {
+        {{ (product().stockQuantity || 0) > 0 ? 'Agregar' : 'Sin Stock' }}
+      } @else {
+        Agregando...
+      }
     </button>
   </div>
 </article>

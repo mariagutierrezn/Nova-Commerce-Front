@@ -163,7 +163,10 @@ export class ProductService {
         product.imageUrl ||
         'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22300%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-family=%22sans-serif%22 font-size=%2218%22%3ENo Image%3C/text%3E%3C/svg%3E',
       categoryId: String(product.categoryId),
-      stock: product.stockQuantity || 0,
+      stockQuantity: product.stockQuantity || 0,
+      hasDiscount: product.hasDiscount || false,
+      discountPercentage: product.discountPercentage || 0,
+      productType: product.productType || 'PHYSICAL',
       createdAt: product.createdDate || new Date().toISOString(),
       updatedAt: product.lastModifiedDate || new Date().toISOString(),
     }));

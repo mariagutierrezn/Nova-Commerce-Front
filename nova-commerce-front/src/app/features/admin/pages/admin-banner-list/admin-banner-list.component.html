@@ -1,0 +1,128 @@
+<div class="admin-banner">
+  <div class="admin-banner__header">
+    <h1 class="admin-banner__title">Gestión del Banner</h1>
+    <button class="btn btn--primary" (click)="openAddModal()">
+      <span class="icon">+</span>
+      Agregar Imagen
+    </button>
+  </div>
+
+  <div class="admin-banner__list">
+    <div *ngIf="banners.length === 0" class="admin-banner__empty">
+      <p>No hay imágenes en el banner. Agrega la primera.</p>
+    </div>
+
+    <div *ngFor="let banner of banners; let i = index" class="banner-card">
+      <div class="banner-card__preview">
+        <img [src]="banner.url" [alt]="banner.alt" class="banner-card__image" />
+      </div>
+      <div class="banner-card__content">
+        <div class="banner-card__info">
+          <h3 class="banner-card__alt">{{ banner.alt || 'Sin texto alternativo' }}</h3>
+          <p class="banner-card__url">{{ banner.url }}</p>
+          <span class="banner-card__orden">Orden: {{ banner.orden }}</span>
+        </div>
+        <div class="banner-card__actions">
+          <button class="btn-icon btn-icon--up" (click)="moveUp(i)" [disabled]="i === 0" title="Subir">↑</button>
+          <button class="btn-icon btn-icon--down" (click)="moveDown(i)" [disabled]="i === banners.length - 1" title="Bajar">↓</button>
+          <button class="btn-icon btn-icon--edit" (click)="openEditModal(banner)" title="Editar">✏️</button>
+          <button class="btn-icon btn-icon--delete" (click)="deleteBanner(banner.id)" title="Eliminar">🗑️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Agregar -->
+<div class="modal" *ngIf="showAddModal">
+  <div class="modal__overlay" (click)="closeAddModal()"></div>
+  <div class="modal__content">
+    <div class="modal__header">
+      <h2 class="modal__title">Agregar Imagen al Banner</h2>
+      <button class="modal__close" (click)="closeAddModal()">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="form-group">
+        <label for="newUrl">URL de la Imagen *</label>
+        <input
+          type="url"
+          id="newUrl"
+          class="form-control"
+          [(ngModel)]="newBanner.url"
+          placeholder="https://ejemplo.com/imagen.jpg"
+        />
+      </div>
+      <div class="form-group">
+        <label for="newAlt">Texto Alternativo</label>
+        <input
+          type="text"
+          id="newAlt"
+          class="form-control"
+          [(ngModel)]="newBanner.alt"
+          placeholder="Descripción de la imagen"
+        />
+      </div>
+      <div class="form-group">
+        <label for="newOrden">Orden</label>
+        <input
+          type="number"
+          id="newOrden"
+          class="form-control"
+          [(ngModel)]="newBanner.orden"
+          min="1"
+        />
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" (click)="closeAddModal()">Cancelar</button>
+      <button class="btn btn--primary" (click)="addBanner()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal" *ngIf="showEditModal">
+  <div class="modal__overlay" (click)="closeEditModal()"></div>
+  <div class="modal__content">
+    <div class="modal__header">
+      <h2 class="modal__title">Editar Imagen del Banner</h2>
+      <button class="modal__close" (click)="closeEditModal()">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="form-group">
+        <label for="editUrl">URL de la Imagen *</label>
+        <input
+          type="url"
+          id="editUrl"
+          class="form-control"
+          [(ngModel)]="editBanner.url"
+          placeholder="https://ejemplo.com/imagen.jpg"
+        />
+      </div>
+      <div class="form-group">
+        <label for="editAlt">Texto Alternativo</label>
+        <input
+          type="text"
+          id="editAlt"
+          class="form-control"
+          [(ngModel)]="editBanner.alt"
+          placeholder="Descripción de la imagen"
+        />
+      </div>
+      <div class="form-group">
+        <label for="editOrden">Orden</label>
+        <input
+          type="number"
+          id="editOrden"
+          class="form-control"
+          [(ngModel)]="editBanner.orden"
+          min="1"
+        />
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" (click)="closeEditModal()">Cancelar</button>
+      <button class="btn btn--primary" (click)="updateBanner()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>

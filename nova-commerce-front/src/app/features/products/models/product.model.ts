@@ -9,7 +9,7 @@ export interface Product {
   price: number;
   imageUrl?: string | null;
   categoryId?: string;
-  stock?: number;
+  stockQuantity?: number;  // Cambiar de stock a stockQuantity para coincidir con el backend
   productType?: 'PHYSICAL' | 'DIGITAL';
   createdAt?: string;
   updatedAt?: string;

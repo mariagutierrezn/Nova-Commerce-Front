@@ -1,5 +1,5 @@
 <!-- Hero Section Moderno con Gradiente -->
-<section class="hero-modern">
+<section class="hero-modern hero-modern--compact">
   <div class="hero-modern__container">
     <div class="hero-modern__content">
       <h1 class="hero-modern__title">
@@ -18,10 +18,23 @@
         </button>
       </div>
     </div>
-    <div class="hero-modern__illustration">
-      <div class="hero-modern__shape hero-modern__shape--1"></div>
-      <div class="hero-modern__shape hero-modern__shape--2"></div>
-      <div class="hero-modern__shape hero-modern__shape--3"></div>
+    <div class="hero-modern__carousel-container">
+      <div class="hero-modern__carousel">
+        <button class="carousel-arrow left" (click)="prevBannerImage()">&#10094;</button>
+        <div class="carousel-image-wrapper">
+          <img class="carousel-image" [src]="bannerImages[currentBannerIndex]?.url" [alt]="bannerImages[currentBannerIndex]?.alt || 'Descuento'" />
+        </div>
+        <button class="carousel-arrow right" (click)="nextBannerImage()">&#10095;</button>
+        <div class="carousel-dots">
+          <span *ngFor="let img of bannerImages; let i = index" class="dot" [class.active]="i === currentBannerIndex" (click)="goToBannerImage(i)" (keydown)="onDotKeydown($event, i)" aria-label="Ir a descuento {{i+1}}"></span>
+        </div>
+      </div>
+      <!-- Fondo animado morado -->
+      <div class="hero-modern__illustration">
+        <div class="hero-modern__shape hero-modern__shape--1"></div>
+        <div class="hero-modern__shape hero-modern__shape--2"></div>
+        <div class="hero-modern__shape hero-modern__shape--3"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -35,7 +48,7 @@
     </div>
 
     <div class="products-section__grid">
-      <div *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/products', product.id]">
+      <div *ngFor="let product of featuredProducts" class="product-card" (click)="viewProduct($event, product.id)">
         <!-- Imagen del producto -->
         <div class="product-card__image-container">
           <img
@@ -65,8 +78,11 @@
 
           <!-- Acciones -->
           <div class="product-card__actions">
-            <button class="btn btn--secondary">Ver Detalles</button>
-            <button class="btn btn--tertiary">Agregar</button>
+            <button class="btn btn--secondary" (click)="viewProduct($event, product.id)">Ver Detalles</button>
+            <button class="btn btn--tertiary" (click)="addToCart($event, product)" 
+                    [disabled]="!product.stockQuantity || product.stockQuantity === 0">
+              {{ product.stockQuantity && product.stockQuantity > 0 ? 'Agregar' : 'Sin Stock' }}
+            </button>
           </div>
         </div>
       </div>
@@ -83,7 +99,7 @@
     </div>
 
     <div class="products-section__grid">
-      <div *ngFor="let product of products" class="product-card" [routerLink]="['/products', product.id]">
+      <div *ngFor="let product of products" class="product-card" (click)="viewProduct($event, product.id)">
         <!-- Imagen del producto -->
         <div class="product-card__image-container">
           <img
@@ -113,8 +129,11 @@
 
           <!-- Acciones -->
           <div class="product-card__actions">
-            <button class="btn btn--secondary">Ver Detalles</button>
-            <button class="btn btn--tertiary">Agregar</button>
+            <button class="btn btn--secondary" (click)="viewProduct($event, product.id)">Ver Detalles</button>
+            <button class="btn btn--tertiary" (click)="addToCart($event, product)" 
+                    [disabled]="!product.stockQuantity || product.stockQuantity === 0">
+              {{ product.stockQuantity && product.stockQuantity > 0 ? 'Agregar' : 'Sin Stock' }}
+            </button>
           </div>
         </div>
       </div>
