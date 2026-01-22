@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -332,6 +332,8 @@ import { CustomerService, Customer } from '../../customer.service';
 })
 export class AdminCustomerListComponent implements OnInit {
   private readonly customerService = inject(CustomerService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
 
   customers: Customer[] = [];
   filteredCustomers: Customer[] = [];
@@ -351,17 +353,23 @@ export class AdminCustomerListComponent implements OnInit {
     this.customerService.getAllCustomers().subscribe({
       next: (customers) => {
         console.log('📦 Clientes cargados:', customers);
-        this.customers = customers;
-        this.filteredCustomers = [...this.customers];
-        this.loading = false;
+        this.ngZone.run(() => {
+          this.customers = customers;
+          this.filteredCustomers = [...this.customers];
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
         console.error('❌ Error cargando clientes:', err);
-        this.error = 'Error al cargar clientes';
-        this.loading = false;
-        // Mantener array vacío en caso de error
-        this.customers = [];
-        this.filteredCustomers = [];
+        this.ngZone.run(() => {
+          this.error = 'Error al cargar clientes';
+          this.loading = false;
+          // Mantener array vacío en caso de error
+          this.customers = [];
+          this.filteredCustomers = [];
+          this.cdr.detectChanges();
+        });
       }
     });
   }

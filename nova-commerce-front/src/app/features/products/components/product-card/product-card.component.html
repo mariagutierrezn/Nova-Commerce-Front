@@ -21,11 +21,15 @@
 
     <!-- Precios -->
     <div class="product-card__pricing">
-      <span class="product-card__price-current">${{ product().price | number: '1.0-0' }}</span>
       @if (product().hasDiscount && product().discountPercentage) {
-        <span class="product-card__price-original">
-          ${{ (product().price / (1 - (product().discountPercentage || 0) / 100)) | number: '1.0-0' }}
+        <span class="product-card__price-current">
+          ${{ (product().price * (1 - (product().discountPercentage || 0) / 100)) | number: '1.0-0' }}
         </span>
+        <span class="product-card__price-original">
+          ${{ product().price | number: '1.0-0' }}
+        </span>
+      } @else {
+        <span class="product-card__price-current">${{ product().price | number: '1.0-0' }}</span>
       }
     </div>
 

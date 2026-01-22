@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, shareReplay } from 'rxjs/operators';
 import { APP_CONFIG } from '../../../core/config/app.config';
 import { Category, CategoryResponse } from './category.model';
 
@@ -11,11 +11,17 @@ import { Category, CategoryResponse } from './category.model';
 export class CategoryService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${APP_CONFIG.api.baseUrl}/api/categories`;
+  private cachedCategories$?: Observable<Category[]>;
 
   list(): Observable<Category[]> {
-    return this.http.get<CategoryResponse>(this.baseUrl).pipe(
-      map(response => response.content)
-    );
+    if (!this.cachedCategories$) {
+      this.cachedCategories$ = this.http.get<CategoryResponse>(this.baseUrl).pipe(
+        map(response => response.content),
+        // shareReplay mantiene el último valor emitido en caché
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.cachedCategories$;
   }
 
   getById(id: number): Observable<Category> {

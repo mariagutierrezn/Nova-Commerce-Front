@@ -31,4 +31,15 @@ export class AdminProductTableComponent {
       this.facade.deleteProduct(id);
     }
   }
+
+  /**
+   * Calcula el precio con descuento basado en el precio original
+   * El backend guarda el precio ORIGINAL, no el precio con descuento
+   */
+  calculateDiscountedPrice(originalPrice: number, discountPercentage: number | undefined): number {
+    if (!discountPercentage) {
+      return originalPrice;
+    }
+    return originalPrice * (1 - discountPercentage / 100);
+  }
 }

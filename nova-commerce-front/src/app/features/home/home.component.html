@@ -70,7 +70,9 @@
 
           <!-- Precios -->
           <div class="product-card__pricing">
-            <span class="product-card__price-current">${{ product.price | number: '1.0-0' }}</span>
+            <span class="product-card__price-current">
+              ${{ product.hasDiscount ? (getDiscountedPrice(product) | number: '1.0-0') : (product.price | number: '1.0-0') }}
+            </span>
             <span *ngIf="product.hasDiscount" class="product-card__price-original">
               ${{ getOriginalPrice(product) | number: '1.0-0' }}
             </span>
@@ -121,7 +123,9 @@
 
           <!-- Precios -->
           <div class="product-card__pricing">
-            <span class="product-card__price-current">${{ product.price | number: '1.0-0' }}</span>
+            <span class="product-card__price-current">
+              ${{ product.hasDiscount ? (getDiscountedPrice(product) | number: '1.0-0') : (product.price | number: '1.0-0') }}
+            </span>
             <span *ngIf="product.hasDiscount" class="product-card__price-original">
               ${{ getOriginalPrice(product) | number: '1.0-0' }}
             </span>

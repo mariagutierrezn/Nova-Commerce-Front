@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AdminProductFacade } from '../../admin-product.facade';
 import { AdminProductFormFieldsComponent } from '../../components/admin-product-form-fields/admin-product-form-fields.component';
@@ -16,6 +16,8 @@ export class AdminProductFormComponent implements OnInit {
   private facade = inject(AdminProductFacade);
   private route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
 
   model: AdminProductInput = {
     name: '',
@@ -30,23 +32,48 @@ export class AdminProductFormComponent implements OnInit {
   selectedFile: File | null = null;
 
   ngOnInit() {
+    // Limpiar estado anterior
+    this.facade.clearSelectedProduct();
+    
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.isEdit = true;
-      const id = idParam; // id es string, no necesita parseInt
+      const id = idParam;
+      
+      console.log('[AdminProductForm] Loading product with ID:', id);
       this.facade.loadProductById(id);
-      (this.facade as any).products$.subscribe((state: any) => {
-        if (state.selectedProduct) {
-          const p = state.selectedProduct;
-          this.model = {
-            name: p.name,
-            description: p.description,
-            price: p.price,
-            stockQuantity: p.stockQuantity,
-            status: p.status,
-            productType: p.productType,
-            categoryId: p.categoryId
-          };
+      
+      // Suscribirse al producto seleccionado
+      const sub = this.facade.selectedProduct$.subscribe({
+        next: (product) => {
+          console.log('[AdminProductForm] Product received:', product);
+          if (product && product.id === id) {
+            // Ejecutar dentro de NgZone para asegurar detección de cambios
+            this.ngZone.run(() => {
+              this.model = {
+                name: product.name || '',
+                description: product.description || '',
+                price: product.price || 0,
+                stockQuantity: product.stockQuantity || 0,
+                status: product.status || 'ACTIVE',
+                productType: product.productType || 'PHYSICAL',
+                categoryId: product.categoryId || 'DEFAULT',
+                imageUrl: product.imageUrl,
+                hasDiscount: product.hasDiscount || false,
+                discountPercentage: product.discountPercentage
+              };
+              console.log('[AdminProductForm] Model updated:', this.model);
+              
+              // Forzar detección de cambios
+              this.cdr.detectChanges();
+            });
+            // Unsubscribe después de cargar
+            sub.unsubscribe();
+          }
+        },
+        error: (err) => {
+          console.error('[AdminProductForm] Error loading product:', err);
+          sub.unsubscribe();
         }
       });
     }
@@ -55,20 +82,17 @@ export class AdminProductFormComponent implements OnInit {
   save() {
     if (this.isEdit) {
       const idParam = this.route.snapshot.paramMap.get('id')!;
-      const id = idParam; // id es string
-      // Actualizar y esperar antes de navegar
-      this.facade.updateProductWithImage(id, this.model, this.selectedFile ?? undefined);
-      setTimeout(() => {
-        this.facade.loadProducts(); // Recargar lista
+      const id = idParam;
+      
+      this.facade.updateProductWithImage(id, this.model, this.selectedFile ?? undefined, () => {
+        this.facade.loadProducts();
         this.router.navigate(['/admin/products']);
-      }, 1000);
+      });
     } else {
-      // Crear y esperar antes de navegar
-      this.facade.createProductWithImage(this.model, this.selectedFile ?? undefined);
-      setTimeout(() => {
-        this.facade.loadProducts(); // Recargar lista
+      this.facade.createProductWithImage(this.model, this.selectedFile ?? undefined, () => {
+        this.facade.loadProducts();
         this.router.navigate(['/admin/products']);
-      }, 1000);
+      });
     }
   }
 

@@ -132,8 +132,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   getOriginalPrice(product: Product): number {
+    // El precio almacenado ya ES el precio original
+    // No necesitamos calcular nada, solo retornarlo
+    return product.price;
+  }
+
+  getDiscountedPrice(product: Product): number {
     if (product.hasDiscount && product.discountPercentage) {
-      return product.price * 100 / (100 - product.discountPercentage);
+      return product.price * (1 - product.discountPercentage / 100);
     }
     return product.price;
   }

@@ -4,6 +4,7 @@
       <th>Imagen</th>
       <th>Nombre</th>
       <th>Precio</th>
+      <th>Descuento</th>
       <th>Stock</th>
       <th>Tipo</th>
       <th>Estado</th>
@@ -22,7 +23,22 @@
         </div>
       </td>
       <td>{{ p.name }}</td>
-      <td><strong>{{ p.price | currency:'USD':'symbol':'1.2-2' }}</strong></td>
+      <td>
+        <div class="price-container">
+          <span *ngIf="p.hasDiscount && p.discountPercentage" class="original-price">
+            {{ p.price | currency:'USD':'symbol':'1.0-0' }}
+          </span>
+          <strong [class.discounted-price]="p.hasDiscount">
+            {{ calculateDiscountedPrice(p.price, p.discountPercentage) | currency:'USD':'symbol':'1.0-0' }}
+          </strong>
+        </div>
+      </td>
+      <td>
+        <div *ngIf="p.hasDiscount && p.discountPercentage" class="discount-badge">
+          -{{ p.discountPercentage }}%
+        </div>
+        <span *ngIf="!p.hasDiscount" class="no-discount">-</span>
+      </td>
       <td>{{ p.stockQuantity }}</td>
       <td>
         <span class="type-badge" [class.type-physical]="p.productType === 'PHYSICAL'"

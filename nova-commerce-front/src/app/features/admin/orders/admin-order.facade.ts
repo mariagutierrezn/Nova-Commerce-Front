@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, map } from 'rxjs';
 import { AdminOrderService } from './admin-order.service';
 import { AdminOrder, AdminOrderStatus } from './admin-order.model';
 
@@ -21,8 +21,8 @@ export class AdminOrderFacade {
   });
 
   state$ = this._state$.asObservable();
-  orders$ = this._state$.asObservable();
-  selectedOrder$ = this._state$.asObservable();
+  orders$ = this._state$.asObservable().pipe(map(state => state.orders));
+  selectedOrder$ = this._state$.asObservable().pipe(map(state => state.selectedOrder));
 
   private setState(partial: Partial<AdminOrderState>) {
     const current = this._state$.value;
