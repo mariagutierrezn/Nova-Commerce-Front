@@ -1,20 +1,20 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
+import { Client, IMessage } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import { 
   BehaviorSubject, 
   Observable, 
   Subject, 
-  timer, 
-  EMPTY
+  timer
 } from 'rxjs';
 import { 
   catchError, 
-  tap, 
-  retry,
+  tap,
   takeUntil
 } from 'rxjs/operators';
 import { APP_CONFIG } from '../config/app.config';
+import { TokenService } from '../../features/auth/services/token.service';
 import { 
   Notification, 
   NotificationEvent, 
@@ -26,11 +26,11 @@ import {
 /**
  * Servicio de Notificaciones en Tiempo Real
  * 
- * Gestiona la conexión WebSocket con el backend y mantiene
- * el estado de las notificaciones del administrador.
+ * Gestiona la conexión WebSocket con el backend usando STOMP sobre SockJS
+ * y mantiene el estado de las notificaciones del administrador.
  * 
  * Features:
- * - Conexión persistente con WebSocket
+ * - Conexión persistente con WebSocket usando STOMP/SockJS
  * - Reconexión automática en caso de desconexión
  * - Almacenamiento de notificaciones en memoria
  * - Consulta de notificaciones históricas desde el backend
@@ -48,9 +48,10 @@ import {
 })
 export class NotificationService {
   private readonly http = inject(HttpClient);
+  private readonly tokenService = inject(TokenService);
   
-  // WebSocket connection
-  private socket$: WebSocketSubject<NotificationEvent> | null = null;
+  // STOMP Client
+  private stompClient: Client | null = null;
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 5;
   private readonly reconnectInterval = 5000; // 5 segundos
@@ -73,59 +74,87 @@ export class NotificationService {
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
   
   /**
-   * Inicializa la conexión WebSocket
+   * Inicializa la conexión WebSocket con STOMP sobre SockJS
    * Se debe llamar cuando el usuario admin se autentica
    */
   connect(): void {
-    if (this.socket$ && !this.socket$.closed) {
+    if (this.stompClient?.connected) {
       console.log('[NotificationService] Ya existe una conexión activa');
       return;
     }
     
-    console.log('[NotificationService] Iniciando conexión WebSocket...');
+    // Obtener token JWT
+    const token = this.tokenService.getAccessToken();
+    if (!token) {
+      console.error('[NotificationService] No hay token disponible, no se puede conectar');
+      return;
+    }
+    
+    console.log('[NotificationService] Iniciando conexión STOMP/SockJS...');
     
     try {
-      this.socket$ = webSocket<NotificationEvent>({
-        url: this.WS_URL,
-        openObserver: {
-          next: () => {
-            console.log('[NotificationService] WebSocket conectado');
-            this.connectionStatusSubject.next(true);
-            this.reconnectAttempts = 0;
-          }
+      // Crear cliente STOMP
+      this.stompClient = new Client({
+        // Usar SockJS como WebSocket factory CON token
+        webSocketFactory: () => {
+          const ws = new SockJS(`${this.WS_URL}?token=${token}`) as any;
+          return ws;
         },
-        closeObserver: {
-          next: () => {
-            console.log('[NotificationService] WebSocket desconectado');
-            this.connectionStatusSubject.next(false);
-            this.handleReconnect();
-          }
+        
+        // Headers de conexión con token
+        connectHeaders: {
+          'Authorization': `Bearer ${token}`
+        },
+        
+        // Configuración de reconexión
+        reconnectDelay: this.reconnectInterval,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        
+        // Debug
+        debug: (str) => {
+          console.log('[STOMP Debug]', str);
+        },
+        
+        // Callbacks
+        onConnect: () => {
+          console.log('[NotificationService] STOMP conectado');
+          this.connectionStatusSubject.next(true);
+          this.reconnectAttempts = 0;
+          
+          // Suscribirse al topic de notificaciones de admin
+          this.stompClient?.subscribe('/topic/admin/notifications', (message: IMessage) => {
+            try {
+              const event: NotificationEvent = JSON.parse(message.body);
+              this.handleNotificationEvent(event);
+            } catch (error) {
+              console.error('[NotificationService] Error al parsear notificación:', error);
+            }
+          });
+          
+          console.log('[NotificationService] Suscrito a /topic/admin/notifications');
+        },
+        
+        onDisconnect: () => {
+          console.log('[NotificationService] STOMP desconectado');
+          this.connectionStatusSubject.next(false);
+        },
+        
+        onStompError: (frame) => {
+          console.error('[NotificationService] Error STOMP:', frame.headers['message']);
+          console.error('Detalles:', frame.body);
+        },
+        
+        onWebSocketError: (error) => {
+          console.error('[NotificationService] Error WebSocket:', error);
         }
       });
       
-      // Suscribirse a mensajes entrantes
-      this.socket$
-        .pipe(
-          takeUntil(this.destroy$),
-          retry({
-            count: 3,
-            delay: 2000
-          }),
-          catchError(error => {
-            console.error('[NotificationService] Error en WebSocket:', error);
-            this.handleReconnect();
-            return EMPTY;
-          })
-        )
-        .subscribe({
-          next: (event: NotificationEvent) => this.handleNotificationEvent(event),
-          error: (error) => {
-            console.error('[NotificationService] Error al recibir notificación:', error);
-          }
-        });
-        
+      // Activar el cliente
+      this.stompClient.activate();
+      
     } catch (error) {
-      console.error('[NotificationService] Error al crear conexión WebSocket:', error);
+      console.error('[NotificationService] Error al crear conexión:', error);
       this.handleReconnect();
     }
   }
@@ -137,9 +166,9 @@ export class NotificationService {
   disconnect(): void {
     console.log('[NotificationService] Cerrando conexión WebSocket...');
     
-    if (this.socket$) {
-      this.socket$.complete();
-      this.socket$ = null;
+    if (this.stompClient) {
+      this.stompClient.deactivate();
+      this.stompClient = null;
     }
     
     this.connectionStatusSubject.next(false);

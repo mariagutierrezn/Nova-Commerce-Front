@@ -36,7 +36,7 @@ export const APP_CONFIG = {
 
   // Configuración de WebSocket para notificaciones en tiempo real
   websocket: {
-    url: 'ws://localhost:8080/ws/notifications',
+    url: 'http://localhost:8080/ws',
     reconnectAttempts: 5,
     reconnectInterval: 5000, // 5 segundos
     heartbeatInterval: 30000, // 30 segundos

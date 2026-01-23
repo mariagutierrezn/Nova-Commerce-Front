@@ -71,9 +71,14 @@ export class LoginComponent implements OnDestroy {
         next: (success) => {
           this.isLoading = false;
           if (success) {
-            // Redirigir a la URL original o al home
-            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-            this.router.navigate([returnUrl]);
+            // Verificar el rol del usuario y redirigir apropiadamente
+            const roles = this.authFacade.getRoles();
+            if (roles.includes('ADMIN')) {
+              this.router.navigate(['/admin/dashboard']);
+            } else {
+              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+              this.router.navigate([returnUrl]);
+            }
           } else {
             this.errorMessage = 'Credenciales inválidas. Por favor, intenta de nuevo.';
           }

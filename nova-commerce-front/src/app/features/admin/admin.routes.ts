@@ -108,6 +108,13 @@ export const ADMIN_ROUTES: Routes = [
           },
         ],
       },
+      {
+        path: 'chat',
+        loadComponent: () =>
+          import('./chat-admin/chat-admin.component').then(
+            (m) => m.ChatAdminComponent
+          ),
+      },
     ],
   },
 ];

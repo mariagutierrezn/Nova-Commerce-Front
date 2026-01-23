@@ -1,0 +1,155 @@
+<div class="chat-admin-container">
+  <!-- Panel izquierdo: Lista de sesiones -->
+  <div class="sessions-panel">
+    <div class="panel-header">
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        Conversaciones
+      </h2>
+      <button class="btn-refresh" (click)="loadActiveSessions()" [disabled]="isLoading">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" 
+             [class.spinning]="isLoading">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="sessions-list">
+      <div class="session-card" 
+           *ngFor="let session of activeSessions"
+           [class.active]="selectedSession?.id === session.id"
+           [class.unread]="session.unreadByAdvisor > 0"
+           (click)="selectSession(session)">
+        
+        <div class="session-avatar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span class="unread-badge" *ngIf="session.unreadByAdvisor > 0">
+            {{ session.unreadByAdvisor }}
+          </span>
+        </div>
+        
+        <div class="session-info">
+          <div class="session-header">
+            <h3>{{ session.customerName }}</h3>
+            <span class="session-time">{{ getRelativeTime(session.lastActivity) }}</span>
+          </div>
+          
+          <div class="session-meta">
+            <span class="badge" [ngClass]="getStatusClass(session.status)">
+              {{ getStatusBadge(session.status) }}
+            </span>
+            <p class="last-message" *ngIf="session.lastMessage">
+              {{ session.lastMessage.content }}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="empty-state" *ngIf="!isLoading && activeSessions.length === 0">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+        <p>No hay conversaciones activas</p>
+      </div>
+      
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Cargando conversaciones...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Panel derecho: Chat activo -->
+  <div class="chat-panel">
+    <div class="empty-chat" *ngIf="!selectedSession">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      <h3>Selecciona una conversación</h3>
+      <p>Elige una conversación de la lista para comenzar a chatear</p>
+    </div>
+    
+    <div class="chat-content" *ngIf="selectedSession">
+      <!-- Header del chat -->
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="customer-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div>
+            <h3>{{ selectedSession.customerName }}</h3>
+            <p class="customer-email">{{ selectedSession.customerEmail }}</p>
+          </div>
+        </div>
+        
+        <div class="chat-actions">
+          <button class="btn-action" (click)="closeSession(selectedSession)" title="Cerrar conversación">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Cerrar chat
+          </button>
+        </div>
+      </div>
+      
+      <!-- Mensajes -->
+      <div class="messages-container" #messagesContainer>
+        <div class="message" 
+             *ngFor="let msg of messages"
+             [class.message-sent]="isMyMessage(msg)"
+             [class.message-received]="!isMyMessage(msg)"
+             [class.message-bot]="msg.senderType === SenderType.BOT">
+          
+          <div class="message-avatar" *ngIf="!isMyMessage(msg)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          
+          <div class="message-content">
+            <div class="message-header" *ngIf="!isMyMessage(msg)">
+              <span class="sender-name">{{ msg.senderName }}</span>
+            </div>
+            <div class="message-bubble">
+              {{ msg.content }}
+            </div>
+            <div class="message-time">
+              {{ msg.sentAt | date: 'short' }}
+              <span class="read-indicator" *ngIf="isMyMessage(msg) && msg.read">✓✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Input -->
+      <div class="message-input">
+        <input 
+          type="text" 
+          [(ngModel)]="newMessage"
+          (keyup.enter)="sendMessage()"
+          placeholder="Escribe tu respuesta..."
+          [disabled]="isConnecting">
+        <button class="btn-send" (click)="sendMessage()" [disabled]="!newMessage.trim() || isConnecting">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

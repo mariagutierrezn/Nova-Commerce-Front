@@ -20,11 +20,9 @@
     </div>
     <div class="hero-modern__carousel-container">
       <div class="hero-modern__carousel">
-        <button class="carousel-arrow left" (click)="prevBannerImage()">&#10094;</button>
         <div class="carousel-image-wrapper">
           <img class="carousel-image" [src]="bannerImages[currentBannerIndex]?.url" [alt]="bannerImages[currentBannerIndex]?.alt || 'Descuento'" />
         </div>
-        <button class="carousel-arrow right" (click)="nextBannerImage()">&#10095;</button>
         <div class="carousel-dots">
           <span *ngFor="let img of bannerImages; let i = index" class="dot" [class.active]="i === currentBannerIndex" (click)="goToBannerImage(i)" (keydown)="onDotKeydown($event, i)" aria-label="Ir a descuento {{i+1}}"></span>
         </div>
@@ -154,3 +152,6 @@
 <div *ngIf="error && !loading" class="loading">
   {{ error }}
 </div>
+
+<!-- Widget de Chat flotante -->
+<app-chat-widget></app-chat-widget>

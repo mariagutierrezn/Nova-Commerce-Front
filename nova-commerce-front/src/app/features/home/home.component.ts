@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { PublicProductService } from '../products/services/public-product.service';
 import { Product } from '../products/models/product.model';
 import { CartFacade } from '../cart/services/cart.facade';
+import { ChatWidgetComponent } from '../../shared/components/chat-widget/chat-widget.component';
 
 /**
  * HomeComponent
@@ -17,13 +18,14 @@ import { CartFacade } from '../cart/services/cart.facade';
  * - Carga productos del endpoint público
  * - Diseño responsivo con hero section
  * - Grilla de productos con información básica
+ * - Widget de chat en vivo integrado
  *
  * ETAPA 7: Agregada visualización de productos públicos
  */
 @Component({
   selector: 'nc-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ChatWidgetComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

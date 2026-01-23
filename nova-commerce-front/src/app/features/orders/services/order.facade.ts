@@ -195,10 +195,17 @@ export class OrderFacade {
     orders$
       .pipe(
         tap((orders) => {
-          this.ordersSubject.next(orders);
-          this.totalSubject.next(orders.length);
-          console.log('✅ Órdenes cargadas exitosamente:', orders.length, 'órdenes');
-          console.log('📋 Detalle de órdenes:', orders);
+          // Ordenar órdenes por fecha de creación descendente (más reciente primero)
+          const sortedOrders = [...orders].sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA; // Descendente: más reciente primero
+          });
+          
+          this.ordersSubject.next(sortedOrders);
+          this.totalSubject.next(sortedOrders.length);
+          console.log('✅ Órdenes cargadas y ordenadas exitosamente:', sortedOrders.length, 'órdenes');
+          console.log('📋 Detalle de órdenes:', sortedOrders);
         }),
         catchError((error) => {
           const message = error?.error?.message || 'Error al cargar órdenes';

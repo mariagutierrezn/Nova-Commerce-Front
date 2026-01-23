@@ -32,7 +32,15 @@ export class AdminOrderFacade {
   loadOrders(status?: AdminOrderStatus) {
     this.setState({ loading: true });
     this.service.list(status).subscribe({
-      next: (orders) => this.setState({ orders, loading: false, statusFilter: status ?? 'ALL' }),
+      next: (orders) => {
+        // Ordenar órdenes por fecha de creación descendente (más reciente primero)
+        const sortedOrders = [...orders].sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // Descendente: más reciente primero
+        });
+        this.setState({ orders: sortedOrders, loading: false, statusFilter: status ?? 'ALL' });
+      },
       error: () => this.setState({ loading: false }),
     });
   }

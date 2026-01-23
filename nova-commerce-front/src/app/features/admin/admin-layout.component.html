@@ -64,25 +64,18 @@
         </svg>
         <span>Banner</span>
       </a>
-    </nav>
 
-    <!-- Footer -->
-    <div class="admin-sidebar__footer">
-      <div class="admin-sidebar__user">
-        <div class="admin-sidebar__user-avatar">A</div>
-        <div class="admin-sidebar__user-info">
-          <span class="admin-sidebar__user-name">Admin</span>
-          <span class="admin-sidebar__user-role">Administrador</span>
-        </div>
-      </div>
-    </div>
+      <a routerLink="/admin/chat" routerLinkActive="active" class="admin-sidebar__link admin-sidebar__link--highlight">
+        <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Chat en Vivo</span>
+      </a>
+    </nav>
   </aside>
 
   <!-- === TOP BAR (DARK MODE) === -->
   <header class="admin-topbar">
-    <a class="admin-topbar__logo" routerLink="/">
-      <img class="admin-topbar__logo-img" src="/logo.svg" alt="NovaCommerce" />
-    </a>
     <div class="admin-topbar__search">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
@@ -133,7 +126,7 @@
           </div>
           
           <div class="admin-topbar__dropdown-footer">
-            <a routerLink="/admin/messages" (click)="showMessages = false">Ver todos los mensajes</a>
+            <a routerLink="/admin/chat" (click)="showMessages = false">Ver todos los mensajes</a>
           </div>
         </div>
       </div>
