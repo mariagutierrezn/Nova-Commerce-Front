@@ -1,0 +1,232 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M9 2a1 1 0 0 0-1 1v2H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a1 1 0 0 0-1-1H9z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </div>
+      <div class="header-content">
+        <h2 class="modal-title">Confirmar Compra</h2>
+        <p class="modal-subtitle">Verifica los detalles antes de finalizar</p>
+      </div>
+      <button class="close-btn" (click)="onCancel()" aria-label="Cerrar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="modal-body">
+      
+      <!-- Información del Cliente -->
+      <div class="section">
+        <div class="section-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <h3>Información Personal</h3>
+        </div>
+        
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="customerName">Nombre Completo</label>
+            <input 
+              type="text" 
+              id="customerName"
+              [(ngModel)]="customerName"
+              placeholder="Juan Pérez"
+              required
+            />
+          </div>
+          
+          <div class="form-field">
+            <label for="customerEmail">Correo Electrónico</label>
+            <input 
+              type="email" 
+              id="customerEmail"
+              [(ngModel)]="customerEmail"
+              placeholder="correo@ejemplo.com"
+              required
+            />
+          </div>
+          
+          <div class="form-field">
+            <label for="customerPhone">Teléfono</label>
+            <input 
+              type="tel" 
+              id="customerPhone"
+              [(ngModel)]="customerPhone"
+              placeholder="+57 300 123 4567"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirección de Envío -->
+      <div class="section">
+        <div class="section-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <h3>Dirección de Envío</h3>
+        </div>
+        
+        <div class="form-field">
+          <label for="shippingAddress">Dirección Completa</label>
+          <textarea 
+            id="shippingAddress"
+            [(ngModel)]="shippingAddress"
+            placeholder="Calle 123 #45-67, Apartamento 890, Bogotá"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Método de Pago -->
+      <div class="section">
+        <div class="section-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          <h3>Método de Pago</h3>
+        </div>
+        
+        <div class="payment-options">
+          <div 
+            *ngFor="let method of paymentMethods" 
+            class="payment-option"
+            [class.payment-option--selected]="paymentMethod === method"
+            (click)="paymentMethod = method"
+          >
+            <div class="payment-radio">
+              <div class="payment-radio__dot" *ngIf="paymentMethod === method"></div>
+            </div>
+            <span class="payment-label">{{ method }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumen de Productos -->
+      <div class="section">
+        <div class="section-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <h3>Productos ({{ items.length }})</h3>
+        </div>
+        
+        <div class="products-list">
+          <div *ngFor="let item of items" class="product-item">
+            <img 
+              [src]="item.imageUrl || '/assets/placeholder-product.png'" 
+              [alt]="item.name"
+              class="product-image"
+            />
+            <div class="product-info">
+              <h4 class="product-name">{{ item.name }}</h4>
+              <p class="product-details">Cantidad: {{ item.quantity }} × ${{ item.price | number: '1.0-0' }}</p>
+            </div>
+            <div class="product-total">${{ (item.price * item.quantity) | number: '1.0-0' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descuentos Aplicados -->
+      <div class="section" *ngIf="discountPreview && discountPreview.discounts.length > 0">
+        <div class="section-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9 9l2 2 4-4"></path>
+          </svg>
+          <h3>Descuentos Aplicados</h3>
+        </div>
+        
+        <div class="discounts-list">
+          <div *ngFor="let discount of discountPreview.discounts" class="discount-item">
+            <div class="discount-badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+              {{ discount.percentage | number: '1.0-0' }}%
+            </div>
+            <div class="discount-info">
+              <h4 class="discount-label">{{ discount.label }}</h4>
+              <p class="discount-description">{{ discount.description }}</p>
+            </div>
+            <div class="discount-amount">-${{ discount.amount | number: '1.0-0' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading/Error States -->
+      <div class="section" *ngIf="loadingDiscounts">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Calculando descuentos...</p>
+        </div>
+      </div>
+
+      <div class="section" *ngIf="discountError">
+        <div class="error-state">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p>{{ discountError }}</p>
+        </div>
+      </div>
+
+      <!-- Resumen de Totales -->
+      <div class="totals-section">
+        <div class="total-row">
+          <span>Subtotal</span>
+          <span>${{ getSubtotal() | number: '1.0-0' }}</span>
+        </div>
+        
+        <div class="total-row total-row--discount" *ngIf="getTotalDiscount() > 0">
+          <span>Total Descuentos</span>
+          <span class="discount-value">-${{ getTotalDiscount() | number: '1.0-0' }}</span>
+        </div>
+        
+        <div class="total-row total-row--final">
+          <span>Total a Pagar</span>
+          <span class="final-value">${{ getFinalTotal() | number: '1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn btn--secondary" (click)="onCancel()">
+        Cancelar
+      </button>
+      <button 
+        class="btn btn--primary" 
+        (click)="onConfirm()"
+        [disabled]="!isFormValid() || loadingDiscounts"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        Confirmar Compra
+      </button>
+    </div>
+  </div>
+</div>

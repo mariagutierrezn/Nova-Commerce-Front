@@ -10,9 +10,21 @@ export interface AdminOrderItem {
   productType?: string;
 }
 
+export interface AppliedDiscount {
+  type: string;
+  percentage: number;
+  amount: number;
+}
+
 export interface AdminOrder {
-  id: number;
-  customerId: number;
+  id: string;
+  orderNumber: number;
+  customerId: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  shippingAddress?: string;
+  paymentMethod?: string;
   status: AdminOrderStatus;
   totalBeforeDiscount: number;
   discountTotal: number;
@@ -20,4 +32,5 @@ export interface AdminOrder {
   createdAt: string;
   updatedAt: string;
   items: AdminOrderItem[];
+  discounts?: AppliedDiscount[];
 }

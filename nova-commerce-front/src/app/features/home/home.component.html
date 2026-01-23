@@ -1,5 +1,5 @@
 <!-- Hero Section Moderno con Gradiente -->
-<section class="hero-modern">
+<section class="hero-modern hero-modern--compact">
   <div class="hero-modern__container">
     <div class="hero-modern__content">
       <h1 class="hero-modern__title">
@@ -18,10 +18,21 @@
         </button>
       </div>
     </div>
-    <div class="hero-modern__illustration">
-      <div class="hero-modern__shape hero-modern__shape--1"></div>
-      <div class="hero-modern__shape hero-modern__shape--2"></div>
-      <div class="hero-modern__shape hero-modern__shape--3"></div>
+    <div class="hero-modern__carousel-container">
+      <div class="hero-modern__carousel">
+        <div class="carousel-image-wrapper">
+          <img class="carousel-image" [src]="bannerImages[currentBannerIndex]?.url" [alt]="bannerImages[currentBannerIndex]?.alt || 'Descuento'" />
+        </div>
+        <div class="carousel-dots">
+          <span *ngFor="let img of bannerImages; let i = index" class="dot" [class.active]="i === currentBannerIndex" (click)="goToBannerImage(i)" (keydown)="onDotKeydown($event, i)" aria-label="Ir a descuento {{i+1}}"></span>
+        </div>
+      </div>
+      <!-- Fondo animado morado -->
+      <div class="hero-modern__illustration">
+        <div class="hero-modern__shape hero-modern__shape--1"></div>
+        <div class="hero-modern__shape hero-modern__shape--2"></div>
+        <div class="hero-modern__shape hero-modern__shape--3"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -35,7 +46,7 @@
     </div>
 
     <div class="products-section__grid">
-      <div *ngFor="let product of featuredProducts" class="product-card" [routerLink]="['/products', product.id]">
+      <div *ngFor="let product of featuredProducts" class="product-card" (click)="viewProduct($event, product.id)">
         <!-- Imagen del producto -->
         <div class="product-card__image-container">
           <img
@@ -57,7 +68,9 @@
 
           <!-- Precios -->
           <div class="product-card__pricing">
-            <span class="product-card__price-current">${{ product.price | number: '1.0-0' }}</span>
+            <span class="product-card__price-current">
+              ${{ product.hasDiscount ? (getDiscountedPrice(product) | number: '1.0-0') : (product.price | number: '1.0-0') }}
+            </span>
             <span *ngIf="product.hasDiscount" class="product-card__price-original">
               ${{ getOriginalPrice(product) | number: '1.0-0' }}
             </span>
@@ -65,8 +78,11 @@
 
           <!-- Acciones -->
           <div class="product-card__actions">
-            <button class="btn btn--secondary">Ver Detalles</button>
-            <button class="btn btn--tertiary">Agregar</button>
+            <button class="btn btn--secondary" (click)="viewProduct($event, product.id)">Ver Detalles</button>
+            <button class="btn btn--tertiary" (click)="addToCart($event, product)" 
+                    [disabled]="!product.stockQuantity || product.stockQuantity === 0">
+              {{ product.stockQuantity && product.stockQuantity > 0 ? 'Agregar' : 'Sin Stock' }}
+            </button>
           </div>
         </div>
       </div>
@@ -83,7 +99,7 @@
     </div>
 
     <div class="products-section__grid">
-      <div *ngFor="let product of products" class="product-card" [routerLink]="['/products', product.id]">
+      <div *ngFor="let product of products" class="product-card" (click)="viewProduct($event, product.id)">
         <!-- Imagen del producto -->
         <div class="product-card__image-container">
           <img
@@ -105,7 +121,9 @@
 
           <!-- Precios -->
           <div class="product-card__pricing">
-            <span class="product-card__price-current">${{ product.price | number: '1.0-0' }}</span>
+            <span class="product-card__price-current">
+              ${{ product.hasDiscount ? (getDiscountedPrice(product) | number: '1.0-0') : (product.price | number: '1.0-0') }}
+            </span>
             <span *ngIf="product.hasDiscount" class="product-card__price-original">
               ${{ getOriginalPrice(product) | number: '1.0-0' }}
             </span>
@@ -113,8 +131,11 @@
 
           <!-- Acciones -->
           <div class="product-card__actions">
-            <button class="btn btn--secondary">Ver Detalles</button>
-            <button class="btn btn--tertiary">Agregar</button>
+            <button class="btn btn--secondary" (click)="viewProduct($event, product.id)">Ver Detalles</button>
+            <button class="btn btn--tertiary" (click)="addToCart($event, product)" 
+                    [disabled]="!product.stockQuantity || product.stockQuantity === 0">
+              {{ product.stockQuantity && product.stockQuantity > 0 ? 'Agregar' : 'Sin Stock' }}
+            </button>
           </div>
         </div>
       </div>
@@ -131,3 +152,6 @@
 <div *ngIf="error && !loading" class="loading">
   {{ error }}
 </div>
+
+<!-- Widget de Chat flotante -->
+<app-chat-widget></app-chat-widget>

@@ -33,6 +33,11 @@ export class AdminProductFormFieldsComponent implements OnInit {
   loadingCategories = true;
 
   ngOnInit() {
+    // Detectar modo de imagen al cargar (si hay imageUrl, usar modo URL)
+    if (this.model.imageUrl && this.model.imageUrl.trim()) {
+      this.imageUploadMode = 'url';
+    }
+    
     this.categoryService.list().subscribe({
       next: (categories) => {
         this.categories = categories;

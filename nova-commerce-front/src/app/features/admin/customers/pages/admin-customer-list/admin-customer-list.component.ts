@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -44,11 +44,9 @@ import { CustomerService, Customer } from '../../customer.service';
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="width: 25%;">Cliente</th>
-                <th style="width: 30%;">Contacto</th>
-                <th style="width: 10%;">Pedidos</th>
-                <th style="width: 15%;">Total Gastado</th>
-                <th style="width: 10%;">Estado</th>
+                <th style="width: 35%;">Cliente</th>
+                <th style="width: 40%;">Contacto</th>
+                <th style="width: 15%;">Estado</th>
                 <th style="width: 10%;">Acciones</th>
               </tr>
             </thead>
@@ -68,8 +66,6 @@ import { CustomerService, Customer } from '../../customer.service';
                     <div class="contact-phone">{{ customer.phone || 'N/A' }}</div>
                   </div>
                 </td>
-                <td class="text-center">{{ customer.totalOrders || 0 }}</td>
-                <td>{{ (customer.totalSpent || 0) | currency:'USD':'symbol':'1.0-0' }}</td>
                 <td>
                   <span class="badge" [class.badge--success]="customer.status === 'ACTIVE'" 
                         [class.badge--danger]="customer.status !== 'ACTIVE'">
@@ -91,12 +87,6 @@ import { CustomerService, Customer } from '../../customer.service';
                       <svg *ngIf="customer.status !== 'ACTIVE'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                    <button class="btn-icon" [routerLink]="['/admin/customers', customer.id]" title="Ver detalles">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
                       </svg>
                     </button>
                   </div>
@@ -332,6 +322,8 @@ import { CustomerService, Customer } from '../../customer.service';
 })
 export class AdminCustomerListComponent implements OnInit {
   private readonly customerService = inject(CustomerService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
 
   customers: Customer[] = [];
   filteredCustomers: Customer[] = [];
@@ -351,17 +343,20 @@ export class AdminCustomerListComponent implements OnInit {
     this.customerService.getAllCustomers().subscribe({
       next: (customers) => {
         console.log('📦 Clientes cargados:', customers);
-        this.customers = customers;
+        // Asegurar que siempre se tenga un array válido
+        this.customers = customers || [];
         this.filteredCustomers = [...this.customers];
         this.loading = false;
+        // Forzar actualización del DOM
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('❌ Error cargando clientes:', err);
         this.error = 'Error al cargar clientes';
         this.loading = false;
-        // Mantener array vacío en caso de error
         this.customers = [];
         this.filteredCustomers = [];
+        this.cdr.markForCheck();
       }
     });
   }
@@ -374,6 +369,8 @@ export class AdminCustomerListComponent implements OnInit {
       const matchesStatus = !this.statusFilter || customer.status === this.statusFilter;
       return matchesSearch && matchesStatus;
     });
+    // Forzar actualización después del filtro
+    this.cdr.markForCheck();
   }
 
   getCustomerName(customer: Customer): string {
@@ -393,22 +390,41 @@ export class AdminCustomerListComponent implements OnInit {
   }
 
   toggleCustomerStatus(customer: Customer): void {
+    // Prevenir múltiples clicks
+    if (this.loading) return;
+    
     const newStatus = customer.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    
+    // Actualización optimista
+    const index = this.customers.findIndex(c => c.id === customer.id);
+    if (index !== -1) {
+      this.customers[index] = { ...this.customers[index], status: newStatus };
+      this.filterCustomers();
+      this.cdr.markForCheck();
+    }
+    
+    // Enviar el objeto completo del cliente con el status actualizado
     const updatedCustomer = { ...customer, status: newStatus };
     
     this.customerService.updateCustomer(customer.id, updatedCustomer).subscribe({
       next: (updated) => {
         console.log('✅ Estado del cliente actualizado:', updated);
-        // Actualizar en la lista local
-        const index = this.customers.findIndex(c => c.id === customer.id);
-        if (index !== -1) {
-          this.customers[index] = updated;
+        // Actualizar con los datos del servidor
+        const idx = this.customers.findIndex(c => c.id === customer.id);
+        if (idx !== -1) {
+          this.customers[idx] = updated;
+          this.filterCustomers();
+          this.cdr.markForCheck();
         }
-        // Re-aplicar filtros
-        this.filterCustomers();
       },
       error: (err) => {
         console.error('❌ Error actualizando estado del cliente:', err);
+        // Revertir cambio optimista
+        if (index !== -1) {
+          this.customers[index] = customer;
+          this.filterCustomers();
+          this.cdr.markForCheck();
+        }
         alert('Error al actualizar el estado del cliente');
       }
     });
@@ -442,6 +458,6 @@ export class AdminCustomerListComponent implements OnInit {
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
   }
 }

@@ -88,8 +88,8 @@ export class AuthFacade {
         });
       }),
       tap(() => {
-        // Redirigir al home después del login
-        this.router.navigate(['/']);
+        // No redirigir automáticamente aquí, dejar que el componente lo haga
+        // this.router.navigate(['/']);
       }),
       map(() => true),
       catchError((error) => {

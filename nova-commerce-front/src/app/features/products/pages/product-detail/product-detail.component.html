@@ -56,14 +56,14 @@
 
           <div class="product-detail-page__stock-container">
             @if (product; as p) {
-              @if (p.stock && p.stock > 0) {
-                @if (p.stock <= 5) {
+              @if (p.stockQuantity && p.stockQuantity > 0) {
+                @if (p.stockQuantity <= 5) {
                   <span class="product-detail-page__stock product-detail-page__stock--low">
-                    ⚠️ Solo quedan {{ p.stock }} unidades
+                    ⚠️ Solo quedan {{ p.stockQuantity }} unidades
                   </span>
                 } @else {
                   <span class="product-detail-page__stock product-detail-page__stock--available">
-                    ✓ En stock ({{ p.stock }} disponibles)
+                    ✓ En stock ({{ p.stockQuantity }} disponibles)
                   </span>
                 }
               } @else {

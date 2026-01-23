@@ -26,7 +26,7 @@ import type { CartItem } from '../../models/cart.model';
 
       <div class="cart-item__info">
         <h3 class="cart-item__name">{{ item.name }}</h3>
-        <p class="cart-item__price">\${{ item.price | number: '1.2-2' }}</p>
+        <p class="cart-item__price">\${{ item.price | number: '1.0-0' }}</p>
       </div>
 
       <div class="cart-item__quantity">
@@ -50,7 +50,7 @@ import type { CartItem } from '../../models/cart.model';
       <div class="cart-item__subtotal">
         <p class="cart-item__subtotal-label">Subtotal:</p>
         <p class="cart-item__subtotal-value">
-          \${{ item.price * item.quantity | number: '1.2-2' }}
+          \${{ item.price * item.quantity | number: '1.0-0' }}
         </p>
       </div>
 

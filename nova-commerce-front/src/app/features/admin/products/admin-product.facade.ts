@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AdminProductService } from './admin-product.service';
 import { AdminProduct, AdminProductInput } from './admin-product.model';
 
@@ -21,8 +22,9 @@ export class AdminProductFacade {
   });
 
   state$ = this._state$.asObservable();
-  products$ = this._state$.asObservable();
-  selectedProduct$ = this._state$.asObservable();
+  products$ = this._state$.asObservable().pipe(map(state => state.products));
+  selectedProduct$ = this._state$.asObservable().pipe(map(state => state.selectedProduct));
+  loading$ = this._state$.asObservable().pipe(map(state => state.loading));
 
   private setState(partial: Partial<AdminProductState>) {
     const current = this._state$.value;
@@ -37,8 +39,12 @@ export class AdminProductFacade {
     });
   }
 
+  clearSelectedProduct() {
+    this.setState({ selectedProduct: null });
+  }
+
   loadProductById(id: string) {
-    this.setState({ loading: true });
+    this.setState({ loading: true, selectedProduct: null });
     this.service.getById(id).subscribe({
       next: (selectedProduct) => this.setState({ selectedProduct, loading: false }),
       error: () => this.setState({ loading: false }),
@@ -60,7 +66,7 @@ export class AdminProductFacade {
   /**
    * Crea un producto y opcionalmente sube una imagen asociada
    */
-  createProductWithImage(input: AdminProductInput, file?: File) {
+  createProductWithImage(input: AdminProductInput, file?: File, onComplete?: () => void) {
     this.setState({ loading: true });
     this.service.create(input).subscribe({
       next: (p) => {
@@ -69,14 +75,22 @@ export class AdminProductFacade {
             next: (res) => {
               const updated = { ...p, imageUrl: res.imageUrl } as AdminProduct;
               this.setState({ products: [updated, ...this._state$.value.products], selectedProduct: updated, loading: false });
+              if (onComplete) onComplete();
             },
-            error: () => this.setState({ products: [p, ...this._state$.value.products], selectedProduct: p, loading: false }),
+            error: () => {
+              this.setState({ products: [p, ...this._state$.value.products], selectedProduct: p, loading: false });
+              if (onComplete) onComplete();
+            },
           });
         } else {
           this.setState({ products: [p, ...this._state$.value.products], selectedProduct: p, loading: false });
+          if (onComplete) onComplete();
         }
       },
-      error: () => this.setState({ loading: false }),
+      error: () => {
+        this.setState({ loading: false });
+        if (onComplete) onComplete();
+      },
     });
   }
 
@@ -88,7 +102,7 @@ export class AdminProductFacade {
   /**
    * Actualiza un producto y opcionalmente sube una imagen después de la actualización
    */
-  updateProductWithImage(id: string, input: AdminProductInput, file?: File) {
+  updateProductWithImage(id: string, input: AdminProductInput, file?: File, onComplete?: () => void) {
     this.setState({ loading: true });
     this.service.update(id, input).subscribe({
       next: (p) => {
@@ -98,18 +112,24 @@ export class AdminProductFacade {
               const updated = { ...p, imageUrl: res.imageUrl } as AdminProduct;
               const products = this._state$.value.products.map((it) => (it.id === updated.id ? updated : it));
               this.setState({ products, selectedProduct: updated, loading: false });
+              if (onComplete) onComplete();
             },
             error: () => {
               const products = this._state$.value.products.map((it) => (it.id === p.id ? p : it));
               this.setState({ products, selectedProduct: p, loading: false });
+              if (onComplete) onComplete();
             },
           });
         } else {
           const products = this._state$.value.products.map((it) => (it.id === p.id ? p : it));
           this.setState({ products, selectedProduct: p, loading: false });
+          if (onComplete) onComplete();
         }
       },
-      error: () => this.setState({ loading: false }),
+      error: () => {
+        this.setState({ loading: false });
+        if (onComplete) onComplete();
+      },
     });
   }
 

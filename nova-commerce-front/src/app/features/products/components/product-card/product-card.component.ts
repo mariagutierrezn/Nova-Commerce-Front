@@ -17,7 +17,7 @@
  */
 
 import { Component, input, Output, EventEmitter } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Product } from '../../models/product.model';
 import { CartFacade } from '../../../cart/services/cart.facade';
@@ -25,7 +25,7 @@ import { CartFacade } from '../../../cart/services/cart.facade';
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.scss',
 })
@@ -39,12 +39,31 @@ export class ProductCardComponent {
 
   isAdding = false;
 
-  constructor(private cartFacade: CartFacade) {}
+  constructor(
+    private cartFacade: CartFacade,
+    private router: Router
+  ) {}
+
+  /**
+   * Navega al detalle del producto cuando se hace click en la tarjeta
+   */
+  onCardClick(): void {
+    this.router.navigate(['/products', this.product().id]);
+  }
+
+  /**
+   * Navega al detalle del producto
+   */
+  onViewDetails(event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/products', this.product().id]);
+  }
 
   /**
    * Agrega el producto al carrito
    */
-  onAddToCart(): void {
+  onAddToCart(event: Event): void {
+    event.stopPropagation();
     this.isAdding = true;
     try {
       const product = this.product();

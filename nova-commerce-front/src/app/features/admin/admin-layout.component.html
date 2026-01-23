@@ -55,25 +55,27 @@
         </svg>
         <span>Descuentos</span>
       </a>
-    </nav>
 
-    <!-- Footer -->
-    <div class="admin-sidebar__footer">
-      <div class="admin-sidebar__user">
-        <div class="admin-sidebar__user-avatar">A</div>
-        <div class="admin-sidebar__user-info">
-          <span class="admin-sidebar__user-name">Admin</span>
-          <span class="admin-sidebar__user-role">Administrador</span>
-        </div>
-      </div>
-    </div>
+      <a routerLink="/admin/banner" routerLinkActive="active" class="admin-sidebar__link">
+        <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>
+        <span>Banner</span>
+      </a>
+
+      <a routerLink="/admin/chat" routerLinkActive="active" class="admin-sidebar__link admin-sidebar__link--highlight">
+        <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Chat en Vivo</span>
+      </a>
+    </nav>
   </aside>
 
   <!-- === TOP BAR (DARK MODE) === -->
   <header class="admin-topbar">
-    <a class="admin-topbar__logo" routerLink="/">
-      <img class="admin-topbar__logo-img" src="/logo.svg" alt="NovaCommerce" />
-    </a>
     <div class="admin-topbar__search">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="8"></circle>
@@ -89,28 +91,132 @@
 
     <div class="admin-topbar__actions">
       <!-- Messages -->
-      <button class="admin-topbar__icon-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </button>
+      <div class="admin-topbar__icon-container">
+        <button class="admin-topbar__icon-btn" (click)="toggleMessages()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="admin-topbar__badge" *ngIf="messageCount > 0">{{ messageCount }}</span>
+        </button>
+        
+        <!-- Messages Dropdown -->
+        <div class="admin-topbar__dropdown admin-topbar__dropdown--wide" *ngIf="showMessages">
+          <div class="admin-topbar__dropdown-header">
+            <h4>Mensajes</h4>
+            <span class="admin-topbar__dropdown-count">{{ messageCount }} nuevos</span>
+          </div>
+          
+          <div class="admin-topbar__dropdown-list">
+            <div *ngFor="let message of messages" 
+                 class="admin-topbar__dropdown-item admin-topbar__message-item"
+                 [class.unread]="!message.read">
+              <div class="admin-topbar__message-avatar">
+                {{ message.sender.charAt(0) }}
+              </div>
+              <div class="admin-topbar__message-content">
+                <div class="admin-topbar__message-sender">{{ message.sender }}</div>
+                <div class="admin-topbar__message-preview">{{ message.preview }}</div>
+                <div class="admin-topbar__message-time">{{ message.time | date:'short' }}</div>
+              </div>
+            </div>
+            
+            <div *ngIf="messages.length === 0" class="admin-topbar__dropdown-empty">
+              No hay mensajes nuevos
+            </div>
+          </div>
+          
+          <div class="admin-topbar__dropdown-footer">
+            <a routerLink="/admin/chat" (click)="showMessages = false">Ver todos los mensajes</a>
+          </div>
+        </div>
+      </div>
 
       <!-- Notifications -->
-      <button class="admin-topbar__icon-btn admin-topbar__icon-btn--notification">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
-        <span class="admin-topbar__badge">3</span>
-      </button>
+      <div class="admin-topbar__icon-container">
+        <button class="admin-topbar__icon-btn admin-topbar__icon-btn--notification" (click)="toggleNotifications()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="admin-topbar__badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+          <!-- Indicador de conexión WebSocket -->
+          <span class="admin-topbar__connection-status" 
+                [class.connected]="isConnected" 
+                [class.disconnected]="!isConnected"
+                [title]="isConnected ? 'Conectado' : 'Desconectado'">
+          </span>
+        </button>
+        
+        <!-- Notifications Dropdown -->
+        <div class="admin-topbar__dropdown admin-topbar__dropdown--wide" *ngIf="showNotifications">
+          <div class="admin-topbar__dropdown-header">
+            <h4>Notificaciones</h4>
+            <span class="admin-topbar__dropdown-count">{{ notificationCount }} nuevas</span>
+          </div>
+          
+          <div class="admin-topbar__dropdown-list">
+            <button *ngFor="let notification of notifications" 
+                    class="admin-topbar__dropdown-item admin-topbar__notification-item"
+                    [class.unread]="!notification.read"
+                    [class.priority-high]="notification.priority === 'HIGH'"
+                    [class.priority-urgent]="notification.priority === 'URGENT'"
+                    (click)="goToOrder(notification)">
+              <div class="admin-topbar__notification-icon" [attr.data-type]="notification.type">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                  <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="admin-topbar__notification-content">
+                <div class="admin-topbar__notification-title" *ngIf="notification.title">{{ notification.title }}</div>
+                <div class="admin-topbar__notification-message">{{ notification.message }}</div>
+                <div class="admin-topbar__notification-time">{{ formatNotificationTime(notification.createdAt) }}</div>
+              </div>
+              <button class="admin-topbar__notification-delete" 
+                      (click)="deleteNotification(notification, $event)"
+                      title="Eliminar notificación">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </button>
+            
+            <div *ngIf="notifications.length === 0" class="admin-topbar__dropdown-empty">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <p>No hay notificaciones nuevas</p>
+            </div>
+          </div>
+          
+          <div class="admin-topbar__dropdown-footer">
+            <a routerLink="/admin/orders" (click)="showNotifications = false">Ver todos los pedidos</a>
+          </div>
+        </div>
+      </div>
 
-      <!-- User profile -->
-      <div class="admin-topbar__user">
-        <span class="admin-topbar__username">Admin</span>
-        <div class="admin-topbar__avatar">A</div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
+      <!-- User profile with dropdown -->
+      <div class="admin-topbar__user-container">
+        <button class="admin-topbar__user" (click)="toggleUserDropdown()">
+          <span class="admin-topbar__username">Admin</span>
+          <div class="admin-topbar__avatar">A</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        
+        <!-- Dropdown menu -->
+        <div class="admin-topbar__dropdown" *ngIf="showUserDropdown">
+          <button class="admin-topbar__dropdown-item" (click)="onLogout()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
     </div>
   </header>

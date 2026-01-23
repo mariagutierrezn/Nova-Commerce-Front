@@ -23,14 +23,14 @@ import { CommonModule } from '@angular/common';
 
       <div class="cart-summary__row">
         <span class="cart-summary__label">Subtotal:</span>
-        <span class="cart-summary__value">\${{ totalAmount | number: '1.2-2' }}</span>
+        <span class="cart-summary__value">\${{ totalAmount | number: '1.0-0' }}</span>
       </div>
 
       <div class="cart-summary__divider"></div>
 
       <div class="cart-summary__row cart-summary__row--total">
         <span class="cart-summary__label">Total:</span>
-        <span class="cart-summary__value">\${{ totalAmount | number: '1.2-2' }}</span>
+        <span class="cart-summary__value">\${{ totalAmount | number: '1.0-0' }}</span>
       </div>
 
       <button

@@ -1,0 +1,140 @@
+<div class="modal" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal__content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal__header">
+      <h2 class="modal__title">Confirmar Compra</h2>
+      <button class="modal__close" (click)="onClose()" type="button">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal__body">
+      <!-- Cliente Info - EDITABLE -->
+      <section class="section">
+        <h3 class="section__title">📋 Datos del Cliente</h3>
+        <div class="section__content">
+          <div class="info-row">
+            <span class="info-row__label">ID Cliente:</span>
+            <span class="info-row__value">{{ customerId }}</span>
+          </div>
+          <div class="info-row info-row--editable">
+            <span class="info-row__label">Nombre:</span>
+            <input 
+              type="text" 
+              [(ngModel)]="checkoutData.customerName" 
+              class="info-row__input"
+              placeholder="Nombre completo" 
+            />
+          </div>
+          <div class="info-row info-row--editable">
+            <span class="info-row__label">Email:</span>
+            <input 
+              type="email" 
+              [(ngModel)]="checkoutData.customerEmail" 
+              class="info-row__input"
+              placeholder="correo@ejemplo.com" 
+            />
+          </div>
+          <div class="info-row info-row--editable">
+            <span class="info-row__label">Teléfono:</span>
+            <input 
+              type="tel" 
+              [(ngModel)]="checkoutData.customerPhone" 
+              class="info-row__input"
+              placeholder="3001234567" 
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Dirección de Envío - EDITABLE -->
+      <section class="section">
+        <h3 class="section__title">📦 Dirección de Envío</h3>
+        <div class="section__content">
+          <textarea 
+            [(ngModel)]="checkoutData.shippingAddress" 
+            class="section__textarea"
+            placeholder="Ingrese su dirección completa de envío"
+            rows="2"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- Método de Pago - DROPDOWN -->
+      <section class="section">
+        <h3 class="section__title">💳 Método de Pago</h3>
+        <div class="section__content">
+          <select [(ngModel)]="checkoutData.paymentMethod" class="section__select">
+            <option *ngFor="let method of paymentMethods" [value]="method">
+              {{ method }}
+            </option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Productos -->
+      <section class="section">
+        <h3 class="section__title">🛍️ Productos ({{ items.length }})</h3>
+        <div class="products">
+          <div class="product-item" *ngFor="let item of items">
+            <img 
+              [src]="item.imageUrl" 
+              [alt]="item.name"
+              class="product-item__image"
+              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27100%27 height=%27100%27%3E%3Crect fill=%27%23f0f0f0%27 width=%27100%27 height=%27100%27/%3E%3Ctext x=%2750%%27 y=%2750%%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23999%27 font-size=%2714%27%3ENo imagen%3C/text%3E%3C/svg%3E'"
+            />
+            <div class="product-item__info">
+              <h4 class="product-item__name">{{ item.name }}</h4>
+              <p class="product-item__details">
+                Cantidad: {{ item.quantity }} × ${{ item.price | number: '1.0-0' }}
+              </p>
+            </div>
+            <div class="product-item__total">
+              ${{ item.price * item.quantity | number: '1.0-0' }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Descuentos Estimados -->
+      <section class="section">
+        <h3 class="section__title">🎁 Descuentos a Aplicar</h3>
+        <div class="section__content">
+          <div class="discount-item" *ngFor="let discount of estimatedDiscounts">
+            <div class="discount-item__info">
+              <span class="discount-item__type">{{ discount.label }}</span>
+              <span class="discount-item__desc">{{ discount.description }}</span>
+            </div>
+            <span class="discount-item__amount">-${{ discount.amount | number: '1.0-0' }}</span>
+          </div>
+          <p class="section__note">*Los descuentos se aplican automáticamente según las reglas del sistema</p>
+        </div>
+      </section>
+
+      <!-- Resumen de Totales -->
+      <section class="section section--totals">
+        <div class="total-row">
+          <span class="total-row__label">Subtotal:</span>
+          <span class="total-row__value">${{ totalAmount | number: '1.0-0' }}</span>
+        </div>
+        <div class="total-row">
+          <span class="total-row__label">Descuentos estimados:</span>
+          <span class="total-row__value total-row__value--discount">-${{ getTotalDiscountEstimate() | number: '1.0-0' }}</span>
+        </div>
+        <div class="total-row total-row--final">
+          <span class="total-row__label">Total estimado:</span>
+          <span class="total-row__value">${{ getFinalTotal() | number: '1.0-0' }}</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal__footer">
+      <button class="btn btn--cancel" (click)="onClose()" type="button">
+        Cancelar
+      </button>
+      <button class="btn btn--confirm" (click)="onConfirm()" type="button">
+        Confirmar y Crear Orden
+      </button>
+    </div>
+  </div>
+</div>

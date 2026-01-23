@@ -32,11 +32,11 @@
           <div class="confirmation__item-info">
             <p class="confirmation__item-name">{{ item.productName || item.name }}</p>
             <p class="confirmation__item-details">
-              {{ item.quantity }} x ${{ item.unitPrice | number: '1.2-2' }}
+              {{ item.quantity }} x ${{ item.unitPrice | number: '1.0-0' }}
             </p>
           </div>
           <p class="confirmation__item-subtotal">
-            ${{ (item.subtotal || item.quantity * item.unitPrice) | number: '1.2-2' }}
+            ${{ (item.subtotal || item.quantity * item.unitPrice) | number: '1.0-0' }}
           </p>
         </div>
       </div>
@@ -46,17 +46,27 @@
     <div class="confirmation__summary">
       <div class="confirmation__summary-row">
         <span>Subtotal</span>
-        <span>${{ order.totalBeforeDiscount | number: '1.2-2' }}</span>
+        <span>${{ order.totalBeforeDiscount | number: '1.0-0' }}</span>
+      </div>
+
+      <!-- Detalle de Descuentos Aplicados -->
+      <div class="confirmation__discounts" *ngIf="order.discounts && order.discounts.length > 0">
+        <div class="confirmation__discount-item" *ngFor="let discount of order.discounts">
+          <span class="confirmation__discount-label">
+            {{ getDiscountLabel(discount.type) }} ({{ discount.percentage }}%)
+          </span>
+          <span class="confirmation__discount-amount">-${{ discount.amount | number: '1.0-0' }}</span>
+        </div>
       </div>
 
       <div class="confirmation__summary-row" *ngIf="order.discountTotal && order.discountTotal > 0">
-        <span>Descuento</span>
-        <span class="confirmation__discount">-${{ order.discountTotal | number: '1.2-2' }}</span>
+        <span><strong>Total Descuentos</strong></span>
+        <span class="confirmation__discount"><strong>-${{ order.discountTotal | number: '1.0-0' }}</strong></span>
       </div>
 
       <div class="confirmation__summary-row confirmation__summary-row--total">
-        <span>Total</span>
-        <span>${{ order.totalAfterDiscount | number: '1.2-2' }}</span>
+        <span>Total Pagado</span>
+        <span>${{ order.totalAfterDiscount | number: '1.0-0' }}</span>
       </div>
     </div>
 

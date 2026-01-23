@@ -28,6 +28,15 @@ export class OrderConfirmationComponent {
     return labels[status] || status;
   }
 
+  getDiscountLabel(type: string): string {
+    const labels: Record<string, string> = {
+      LOYALTY: 'Descuento por Lealtad',
+      PRODUCT: 'Descuento del Producto',
+      SEASON: 'Descuento de Temporada',
+    };
+    return labels[type] || type;
+  }
+
   formatDate(date: string | Date): string {
     const d = new Date(date);
     return d.toLocaleDateString('es-ES', {

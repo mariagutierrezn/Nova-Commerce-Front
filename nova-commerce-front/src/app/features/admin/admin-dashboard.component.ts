@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AdminProductFacade } from './products/admin-product.facade';
@@ -379,6 +379,8 @@ interface DashboardMetrics {
 export class AdminDashboardComponent implements OnInit {
   private readonly productFacade = inject(AdminProductFacade);
   private readonly orderFacade = inject(AdminOrderFacade);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
 
   metrics: DashboardMetrics = {
     totalOrders: 0,
@@ -396,36 +398,43 @@ export class AdminDashboardComponent implements OnInit {
     this.productFacade.loadProducts();
     this.orderFacade.loadOrders();
 
-    // Suscribirse a los estados para calcular métricas
-    this.productFacade.state$.subscribe((state: any) => {
-      this.metrics.totalProducts = state.products?.length || 0;
+    // Suscribirse a los productos para calcular métricas
+    this.productFacade.products$.subscribe((products: any[]) => {
+      this.ngZone.run(() => {
+        this.metrics.totalProducts = products?.length || 0;
+        this.cdr.detectChanges();
+      });
     });
 
-    this.orderFacade.state$.subscribe((state: any) => {
-      const orders = state.orders || [];
-      this.recentOrders = orders.sort((a: any, b: any) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      
-      this.metrics.totalOrders = orders.length;
-      this.metrics.totalRevenue = orders.reduce((sum: number, o: any) => sum + (o.totalAfterDiscount || 0), 0);
-      this.metrics.averageOrderValue = this.metrics.totalOrders > 0 
-        ? this.metrics.totalRevenue / this.metrics.totalOrders 
-        : 0;
-      
-      // Órdenes pendientes (CREATED o PAID)
-      this.metrics.pendingOrders = orders.filter((o: any) => 
-        o.status === 'CREATED' || o.status === 'PAID'
-      ).length;
+    // Suscribirse a las órdenes para calcular métricas
+    this.orderFacade.orders$.subscribe((orders: any[]) => {
+      this.ngZone.run(() => {
+        this.recentOrders = [...orders].sort((a: any, b: any) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
+        this.metrics.totalOrders = orders.length;
+        this.metrics.totalRevenue = orders.reduce((sum: number, o: any) => sum + (o.totalAfterDiscount || 0), 0);
+        this.metrics.averageOrderValue = this.metrics.totalOrders > 0 
+          ? this.metrics.totalRevenue / this.metrics.totalOrders 
+          : 0;
+        
+        // Órdenes pendientes (CREATED o PAID)
+        this.metrics.pendingOrders = orders.filter((o: any) => 
+          o.status === 'CREATED' || o.status === 'PAID'
+        ).length;
 
-      // Órdenes de hoy
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      this.metrics.ordersToday = orders.filter((o: any) => {
-        const orderDate = new Date(o.createdAt);
-        orderDate.setHours(0, 0, 0, 0);
-        return orderDate.getTime() === today.getTime();
-      }).length;
+        // Órdenes de hoy
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        this.metrics.ordersToday = orders.filter((o: any) => {
+          const orderDate = new Date(o.createdAt);
+          orderDate.setHours(0, 0, 0, 0);
+          return orderDate.getTime() === today.getTime();
+        }).length;
+        
+        this.cdr.detectChanges();
+      });
     });
   }
 

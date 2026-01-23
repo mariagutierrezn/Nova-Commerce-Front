@@ -75,6 +75,13 @@ export const ADMIN_ROUTES: Routes = [
                 (m) => m.AdminCustomerListComponent
               ),
           },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./customers/pages/admin-customer-detail/admin-customer-detail.component').then(
+                (m) => m.AdminCustomerDetailComponent
+              ),
+          },
         ],
       },
       {
@@ -88,6 +95,25 @@ export const ADMIN_ROUTES: Routes = [
               ),
           },
         ],
+      },
+      {
+        path: 'banner',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./pages/admin-banner-list/admin-banner-list.component').then(
+                (m) => m.AdminBannerListComponent
+              ),
+          },
+        ],
+      },
+      {
+        path: 'chat',
+        loadComponent: () =>
+          import('./chat-admin/chat-admin.component').then(
+            (m) => m.ChatAdminComponent
+          ),
       },
     ],
   },

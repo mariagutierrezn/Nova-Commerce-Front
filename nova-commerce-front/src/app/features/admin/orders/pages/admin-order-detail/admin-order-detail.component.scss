@@ -15,15 +15,42 @@
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: var(--admin-shadow);
-  display: flex;
-  justify-content: space-between;
+}
+
+.order-header__top {
+  margin-bottom: 1rem;
+}
+
+.back-button {
+  display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 2px solid var(--admin-border);
+  border-radius: 8px;
+  color: var(--admin-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: var(--admin-hover);
+  border-color: var(--admin-primary);
+  color: var(--admin-primary);
+}
+
+.back-button svg {
+  flex-shrink: 0;
 }
 
 .order-header__info {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .order-header__title {
@@ -124,6 +151,38 @@
   gap: 1rem;
 }
 
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  color: var(--admin-text);
+  font-weight: 500;
+  text-align: right;
+  max-width: 60%;
+}
+
+.payment-method {
+  text-transform: capitalize;
+}
+
 .card-label {
   font-size: 0.85rem;
   color: var(--admin-text-muted);
@@ -203,7 +262,7 @@
 .item-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .item-name {
@@ -212,7 +271,19 @@
   color: var(--admin-text);
 }
 
-.item-quantity {
+.item-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+}
+
+.item-separator {
+  color: var(--admin-border);
+}
+
+.item-quantity, .item-unit-price {
   font-size: 0.85rem;
   color: var(--admin-text-muted);
 }
@@ -270,4 +341,44 @@
 
 .action-btn svg {
   flex-shrink: 0;
+}
+
+.discounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.discount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #10b98110 0%, #10b98105 100%);
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+}
+
+.discount-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.discount-type {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.discount-percentage {
+  font-size: 0.85rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.discount-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #10b981;
 }

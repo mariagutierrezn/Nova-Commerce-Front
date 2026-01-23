@@ -174,7 +174,7 @@ export class CartFacade {
    * Delega al OrderFacade para crear la orden en backend
    * Backend calcula descuentos y totales finales
    */
-  checkout(): void {
+  checkout(checkoutData?: any): void {
     const currentCart = this.cartSubject.value;
 
     if (currentCart.items.length === 0) {
@@ -193,9 +193,10 @@ export class CartFacade {
     }));
 
     console.log('Iniciando checkout con items:', orderItems);
+    console.log('Datos del checkout:', checkoutData);
 
-    // Delegar a OrderFacade
-    this.orderFacade.createOrder(orderItems);
+    // Delegar a OrderFacade con datos adicionales
+    this.orderFacade.createOrder(orderItems, checkoutData);
 
     // Limpiar carrito tras creación exitosa
     // (En una versión más sofisticada, esperaríamos confirmación del backend)
