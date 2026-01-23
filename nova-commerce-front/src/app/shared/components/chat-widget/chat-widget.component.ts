@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../../core/services/chat.service';
+import { TokenService } from '../../../features/auth/services/token.service';
+import { CustomerService, Customer } from '../../../features/admin/customers/customer.service';
 import {
   ChatSession,
   ChatMessage,
@@ -36,23 +38,70 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     { id: 1, text: '¿Cuáles son los métodos de pago?', answer: 'Aceptamos tarjetas de crédito, débito, PayPal y transferencias bancarias.' },
     { id: 2, text: '¿Cuánto tarda el envío?', answer: 'El envío estándar tarda entre 3-5 días hábiles. El envío express llega en 24-48 horas.' },
     { id: 3, text: '¿Cómo puedo rastrear mi pedido?', answer: 'Puedes rastrear tu pedido desde la sección "Mis Pedidos" con el número de tracking que te enviamos por email.' },
-    { id: 4, text: '¿Cuál es la política de devoluciones?', answer: 'Tienes 30 días para devolver productos sin usar. Procesamos reembolsos en 5-7 días hábiles.' }
+    { id: 4, text: '¿Cuál es la política de devoluciones?', answer: 'Tienes 30 días para devolver productos sin usar. Procesamos reembolsos en 5-7 días hábiles.' },
+    { id: 5, text: '¿Quiero hablar con un asesor?', answer: '', isAdvisor: true }
   ];
   
-  // Usuario actual (deberías obtenerlo del servicio de autenticación)
+  // Usuario actual (se obtiene del servicio de autenticación)
   currentUser = {
-    id: 'customer_' + Date.now(),
+    id: '',
     name: 'Cliente',
     email: 'cliente@example.com'
   };
   
   private subscriptions: Subscription[] = [];
+  private isSending = false; // Prevenir envíos duplicados
   
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private tokenService: TokenService,
+    private customerService: CustomerService
+  ) {}
   
   ngOnInit(): void {
+    // Obtener datos reales del usuario
+    this.loadCurrentUser();
     // Conectar al WebSocket cuando se inicializa el componente
     this.connectWebSocket();
+  }
+  
+  /**
+   * Carga los datos del usuario actual desde el token y customer service
+   */
+  private loadCurrentUser(): void {
+    const customerId = this.tokenService.getCustomerId();
+    const username = this.tokenService.getUsername();
+    
+    if (customerId) {
+      // Intentar obtener datos completos del customer
+      this.customerService.getCustomerById(customerId.toString()).subscribe({
+        next: (customer: Customer) => {
+          this.currentUser = {
+            id: customer.id || 'customer_' + Date.now(),
+            name: `${customer.firstName} ${customer.lastName}`.trim() || username || 'Cliente',
+            email: customer.email || 'cliente@example.com'
+          };
+          console.log('✅ Usuario cargado:', this.currentUser);
+        },
+        error: (error) => {
+          console.warn('⚠️ No se pudo cargar el customer, usando datos básicos:', error);
+          // Fallback: usar datos del token
+          this.currentUser = {
+            id: customerId.toString(),
+            name: username || 'Cliente',
+            email: username ? `${username}@example.com` : 'cliente@example.com'
+          };
+        }
+      });
+    } else {
+      // Usuario no autenticado o sin customerId
+      console.warn('⚠️ Usuario no autenticado, usando datos por defecto');
+      this.currentUser = {
+        id: 'guest_' + Date.now(),
+        name: username || 'Cliente',
+        email: 'invitado@example.com'
+      };
+    }
   }
   
   ngOnDestroy(): void {
@@ -172,6 +221,15 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
    * Maneja la respuesta a una pregunta del bot
    */
   handleBotQuestion(question: any): void {
+    // Si es la pregunta de asesor, iniciar chat con asesor
+    if (question.isAdvisor) {
+      this.addBotMessage(question.text, SenderType.CUSTOMER);
+      setTimeout(() => {
+        this.talkToAdvisorWithMessage('Hola, necesito hablar con un asesor. ¿Pueden ayudarme?');
+      }, 300);
+      return;
+    }
+    
     // Agregar pregunta del usuario
     this.addBotMessage(question.text, SenderType.CUSTOMER);
     
@@ -185,6 +243,13 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
    * Inicia el chat con un asesor humano
    */
   talkToAdvisor(): void {
+    this.talkToAdvisorWithMessage(null);
+  }
+
+  /**
+   * Inicia el chat con un asesor y opcionalmente envía un mensaje inicial
+   */
+  private talkToAdvisorWithMessage(initialMessage: string | null): void {
     console.log('🔄 Iniciando conexión con asesor...');
     this.inBotMode = false;
     
@@ -210,8 +275,13 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
             this.messages = messages;
             this.scrollToBottom();
             
-            // Agregar mensaje de confirmación
-            if (messages.length === 0) {
+            // Si hay un mensaje inicial, enviarlo
+            if (initialMessage) {
+              setTimeout(() => {
+                console.log('📤 Enviando mensaje inicial al asesor:', initialMessage);
+                this.sendMessageToAdvisor(initialMessage);
+              }, 500);
+            } else if (messages.length === 0) {
               this.addSystemMessage('¡Conectado! Escribe tu mensaje y un asesor te responderá pronto.');
             }
           },
@@ -246,48 +316,67 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       // Respuesta automática
       setTimeout(() => {
         this.addBotMessage(
-          'Para obtener ayuda personalizada, por favor selecciona "Hablar con un asesor".',
+          'Para obtener ayuda personalizada, por favor selecciona "¿Quiero hablar con un asesor?".',
           SenderType.BOT
         );
       }, 300);
     } else {
-      // Modo asesor - enviar por WebSocket
-      if (!this.currentSession) {
-        console.error('❌ No hay sesión activa');
-        this.addSystemMessage('Por favor inicia una conversación con un asesor primero.');
-        return;
-      }
-      
-      console.log('📤 Enviando mensaje...', messageContent);
-      
-      const messageRequest = {
-        sessionId: this.currentSession.id,
-        senderId: this.currentUser.id,
-        senderName: this.currentUser.name,
-        senderType: SenderType.CUSTOMER,
-        content: messageContent,
-        messageType: MessageType.TEXT
-      };
-      
-      // Agregar mensaje optimista (se mostrará antes de confirmación del servidor)
-      const optimisticMessage: ChatMessage = {
-        sessionId: this.currentSession.id,
-        senderId: this.currentUser.id,
-        senderName: this.currentUser.name,
-        senderType: SenderType.CUSTOMER,
-        content: messageContent,
-        sentAt: new Date(),
-        read: false,
-        messageType: MessageType.TEXT
-      };
-      
-      this.messages.push(optimisticMessage);
-      this.scrollToBottom();
-      
-      // Enviar por WebSocket
-      this.chatService.sendMessageViaWebSocket(messageRequest);
-      console.log('✅ Mensaje enviado por WebSocket');
+      this.sendMessageToAdvisor(messageContent);
     }
+  }
+
+  /**
+   * Envía un mensaje al asesor por WebSocket
+   */
+  private sendMessageToAdvisor(messageContent: string): void {
+    // Prevenir envíos duplicados
+    if (this.isSending) {
+      console.warn('⚠️ Ya hay un envío en proceso, esperando...');
+      return;
+    }
+    
+    // Modo asesor - enviar por WebSocket
+    if (!this.currentSession) {
+      console.error('❌ No hay sesión activa');
+      this.addSystemMessage('Por favor inicia una conversación con un asesor primero.');
+      return;
+    }
+    
+    this.isSending = true;
+    console.log('📤 Enviando mensaje al asesor...', messageContent);
+    
+    const messageRequest = {
+      sessionId: this.currentSession.id,
+      senderId: this.currentUser.id,
+      senderName: this.currentUser.name,
+      senderType: SenderType.CUSTOMER,
+      content: messageContent,
+      messageType: MessageType.TEXT
+    };
+    
+    // Agregar mensaje optimista (se mostrará antes de confirmación del servidor)
+    const optimisticMessage: ChatMessage = {
+      sessionId: this.currentSession.id,
+      senderId: this.currentUser.id,
+      senderName: this.currentUser.name,
+      senderType: SenderType.CUSTOMER,
+      content: messageContent,
+      sentAt: new Date(),
+      read: false,
+      messageType: MessageType.TEXT
+    };
+    
+    this.messages.push(optimisticMessage);
+    this.scrollToBottom();
+    
+    // Enviar por WebSocket
+    this.chatService.sendMessageViaWebSocket(messageRequest);
+    console.log('✅ Mensaje enviado por WebSocket al asesor');
+    
+    // Liberar flag después de 500ms para permitir el siguiente envío
+    setTimeout(() => {
+      this.isSending = false;
+    }, 500);
   }
   
   /**

@@ -281,6 +281,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .chat-header {
@@ -360,10 +361,13 @@
 .messages-container {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0; /* Importante para que funcione el scroll */
+  max-height: calc(100vh - 280px); /* Altura fija menos header y input */
 }
 
 .message {
@@ -454,6 +458,9 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   gap: 12px;
+  flex-shrink: 0; /* No se encoge nunca */
+  position: relative;
+  z-index: 10;
   
   input {
     flex: 1;

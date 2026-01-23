@@ -35,6 +35,8 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
   
   isLoading = false;
   isConnecting = false;
+  private autoRefreshInterval: any = null;
+  private isSendingMessage = false; // Prevenir envíos duplicados
   
   private subscriptions: Subscription[] = [];
   
@@ -50,6 +52,9 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
   
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+    }
     this.chatService.disconnect();
   }
   
@@ -72,6 +77,9 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
       // Cargar sesiones activas
       this.loadActiveSessions();
       
+      // Configurar auto-refresh cada 5 segundos
+      this.startAutoRefresh();
+      
       console.log('✅ Chat admin inicializado');
     } catch (error) {
       console.error('❌ Error al inicializar chat admin:', error);
@@ -81,14 +89,33 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
   }
   
   /**
+   * Inicia el auto-refresh de sesiones
+   */
+  private startAutoRefresh(): void {
+    // Actualizar cada 5 segundos
+    this.autoRefreshInterval = setInterval(() => {
+      this.loadActiveSessions();
+    }, 5000);
+  }
+
+  /**
    * Carga las sesiones activas
    */
   loadActiveSessions(): void {
-    this.isLoading = true;
+    // No mostrar loading si es un refresh automático
+    const isManualRefresh = !this.autoRefreshInterval;
+    if (isManualRefresh) {
+      this.isLoading = true;
+    }
     
     this.chatService.getActiveSessions().subscribe({
       next: (sessions) => {
-        this.activeSessions = sessions;
+        // Mantener el orden: nuevas primero
+        this.activeSessions = sessions.sort((a, b) => {
+          const dateA = new Date(a.lastActivity || a.createdAt).getTime();
+          const dateB = new Date(b.lastActivity || b.createdAt).getTime();
+          return dateB - dateA;
+        });
         this.isLoading = false;
         
         // Si hay una sesión seleccionada, actualizarla
@@ -96,6 +123,10 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
           const updated = sessions.find(s => s.id === this.selectedSession!.id);
           if (updated) {
             this.selectedSession = updated;
+            // Recargar mensajes si es necesario
+            if (this.messages.length === 0) {
+              this.loadMessages(this.selectedSession.id);
+            }
           }
         }
       },
@@ -172,6 +203,13 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
    * Selecciona una sesión para ver/responder
    */
   selectSession(session: ChatSession): void {
+    console.log('📝 Seleccionando sesión:', session.id);
+    
+    // Desuscribirse de la sesión anterior si existe
+    if (this.selectedSession && this.selectedSession.id !== session.id) {
+      console.log('🔌 Desconectando de sesión anterior:', this.selectedSession.id);
+    }
+    
     this.selectedSession = session;
     this.messages = [];
     
@@ -180,11 +218,28 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
       this.assignToMe(session);
     }
     
-    // Suscribirse a la sesión
+    // Suscribirse a la sesión para recibir mensajes en tiempo real
     this.chatService.subscribeToSession(session.id);
+    console.log('✅ Suscrito a la sesión:', session.id);
     
-    // Cargar historial de mensajes
+    // Cargar historial de mensajes INMEDIATAMENTE sin delay
     this.loadMessages(session.id);
+    
+    // Verificación adicional a los 200ms
+    setTimeout(() => {
+      if (this.messages.length === 0) {
+        console.log('⚠️ No hay mensajes después de 200ms, recargando...');
+        this.loadMessages(session.id);
+      }
+    }, 200);
+    
+    // Última verificación a los 800ms
+    setTimeout(() => {
+      if (this.messages.length === 0) {
+        console.log('⚠️ No hay mensajes después de 800ms, forzando recarga final...');
+        this.loadMessages(session.id);
+      }
+    }, 800);
   }
   
   /**
@@ -216,17 +271,30 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
   /**
    * Carga los mensajes de una sesión
    */
-  private loadMessages(sessionId: string): void {
+  private loadMessages(sessionId: string, retryCount = 0): void {
+    console.log('📥 Cargando mensajes para sesión:', sessionId, 'intento:', retryCount + 1);
     this.chatService.getSessionMessages(sessionId).subscribe({
       next: (messages) => {
+        console.log('✅ Mensajes cargados:', messages.length);
         this.messages = messages;
         this.scrollToBottom();
         
-        // Marcar como leído
-        this.markAsRead();
+        // Marcar como leído después de cargar
+        setTimeout(() => {
+          this.markAsRead();
+        }, 500);
       },
       error: (error) => {
-        console.error('Error al cargar mensajes:', error);
+        console.error('❌ Error al cargar mensajes:', error);
+        // Reintentar solo 2 veces más
+        if (retryCount < 2) {
+          setTimeout(() => {
+            console.log('🔄 Reintentando cargar mensajes...');
+            this.loadMessages(sessionId, retryCount + 1);
+          }, 1000);
+        } else {
+          console.error('❌ Error definitivo al cargar mensajes después de 3 intentos');
+        }
       }
     });
   }
@@ -236,20 +304,53 @@ export class ChatAdminComponent implements OnInit, OnDestroy {
    */
   sendMessage(): void {
     if (!this.newMessage.trim() || !this.selectedSession) {
+      console.warn('⚠️ No se puede enviar mensaje: campo vacío o sin sesión');
       return;
     }
+    
+    // Prevenir envíos duplicados
+    if (this.isSendingMessage) {
+      console.warn('⚠️ Ya hay un mensaje enviándose, esperando...');
+      return;
+    }
+    
+    this.isSendingMessage = true;
+    const messageContent = this.newMessage.trim();
+    console.log('📤 Enviando mensaje del admin:', messageContent);
     
     const messageRequest = {
       sessionId: this.selectedSession.id,
       senderId: this.currentAdmin.id,
       senderName: this.currentAdmin.name,
       senderType: SenderType.ADVISOR,
-      content: this.newMessage,
+      content: messageContent,
       messageType: MessageType.TEXT
     };
     
-    this.chatService.sendMessageViaWebSocket(messageRequest);
+    // Agregar mensaje optimista
+    const optimisticMessage: ChatMessage = {
+      sessionId: this.selectedSession.id,
+      senderId: this.currentAdmin.id,
+      senderName: this.currentAdmin.name,
+      senderType: SenderType.ADVISOR,
+      content: messageContent,
+      sentAt: new Date(),
+      read: false,
+      messageType: MessageType.TEXT
+    };
+    
+    this.messages.push(optimisticMessage);
     this.newMessage = '';
+    this.scrollToBottom();
+    
+    // Enviar por WebSocket
+    this.chatService.sendMessageViaWebSocket(messageRequest);
+    console.log('✅ Mensaje del admin enviado por WebSocket');
+    
+    // Liberar flag después de 500ms
+    setTimeout(() => {
+      this.isSendingMessage = false;
+    }, 500);
   }
   
   /**
