@@ -33,4 +33,20 @@ export const APP_CONFIG = {
     refreshTokenKey: 'refresh_token',
     sessionStorageKey: 'user_session',
   },
+
+  // Configuración de WebSocket para notificaciones en tiempo real
+  websocket: {
+    url: 'ws://localhost:8080/ws/notifications',
+    reconnectAttempts: 5,
+    reconnectInterval: 5000, // 5 segundos
+    heartbeatInterval: 30000, // 30 segundos
+  },
+
+  // Configuración de notificaciones
+  notifications: {
+    maxStoredInMemory: 50,
+    defaultPageSize: 20,
+    soundEnabled: true,
+    soundPath: '/assets/sounds/notification.mp3',
+  },
 };

@@ -75,6 +75,13 @@ export const ADMIN_ROUTES: Routes = [
                 (m) => m.AdminCustomerListComponent
               ),
           },
+          {
+            path: ':id',
+            loadComponent: () =>
+              import('./customers/pages/admin-customer-detail/admin-customer-detail.component').then(
+                (m) => m.AdminCustomerDetailComponent
+              ),
+          },
         ],
       },
       {

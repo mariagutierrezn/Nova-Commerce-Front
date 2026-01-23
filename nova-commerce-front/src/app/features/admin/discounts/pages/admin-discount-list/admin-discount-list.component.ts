@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DiscountService, DiscountRule } from '../../services/discount.service';
+import { AdminDiscountFormComponent } from '../../components/admin-discount-form/admin-discount-form.component';
 
 /**
  * Estrategias de descuento disponibles en el sistema
@@ -21,7 +22,7 @@ enum DiscountStrategy {
 @Component({
   selector: 'app-admin-discount-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, AdminDiscountFormComponent],
   template: `
     <div class="admin-page">
       <div class="admin-page__header">
@@ -62,7 +63,24 @@ enum DiscountStrategy {
           </div>
         </div>
 
-        <div class="admin-table-wrapper">
+        <!-- Indicador de carga -->
+        <div *ngIf="loading" class="loading-container">
+          <div class="spinner"></div>
+          <p>Cargando reglas de descuento...</p>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div *ngIf="error && !loading" class="error-container">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <p>{{ error }}</p>
+          <button class="btn btn--primary" (click)="loadRules()">Reintentar</button>
+        </div>
+
+        <div *ngIf="!loading && !error" class="admin-table-wrapper">
           <table class="admin-table">
             <thead>
               <tr>
@@ -137,12 +155,20 @@ enum DiscountStrategy {
               </tr>
             </tbody>
           </table>
-        </div>
 
-        <p class="admin-card__empty" *ngIf="filteredRules.length === 0">
-          No hay reglas de descuento configuradas
-        </p>
+          <p class="admin-card__empty" *ngIf="filteredRules.length === 0">
+            No hay reglas de descuento configuradas
+          </p>
+        </div>
       </div>
+
+      <!-- Modal de Formulario -->
+      <app-admin-discount-form 
+        *ngIf="showFormModal"
+        [rule]="selectedRule"
+        (saved)="onRuleSaved($event)"
+        (cancelled)="onFormCancelled()"
+      />
     </div>
   `,
   styles: [`
@@ -406,6 +432,47 @@ enum DiscountStrategy {
       padding: 3rem;
       color: var(--admin-text-muted);
     }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 1rem;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(59, 130, 246, 0.1);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 1rem;
+      color: #ef4444;
+    }
+
+    .error-container svg {
+      stroke: #ef4444;
+    }
+
+    .error-container p {
+      font-size: 1rem;
+      margin: 0;
+    }
   `]
 })
 export class AdminDiscountListComponent implements OnInit {
@@ -416,6 +483,10 @@ export class AdminDiscountListComponent implements OnInit {
   filterStrategy = '';
   loading = false;
   error: string | null = null;
+  
+  // Modal state
+  showFormModal = false;
+  selectedRule?: DiscountRule;
 
   strategies = [
     { name: 'Lealtad', description: 'Descuentos por nivel de cliente (Bronce, Plata, Oro, VIP)', count: 0, key: 'LOYALTY' },
@@ -429,27 +500,44 @@ export class AdminDiscountListComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    console.log('🔄 AdminDiscountListComponent - Iniciando carga de reglas...');
     this.loadRules();
   }
 
   loadRules(): void {
+    console.log('📡 Cargando reglas de descuento desde API...');
     this.loading = true;
     this.error = null;
     
     this.discountService.getAll().subscribe({
       next: (rules) => {
+        console.log('✅ Reglas de descuento cargadas:', rules);
+        console.log(`📊 Total de reglas recibidas: ${rules.length}`);
+        
         this.rules = rules.map(rule => ({
           ...rule,
           startDate: rule.startDate,
           endDate: rule.endDate
         }));
+        
+        console.log('🔄 Reglas procesadas:', this.rules);
+        
         this.updateStrategyCounts();
         this.filteredRules = [...this.rules];
+        
+        console.log(`📋 Reglas filtradas a mostrar: ${this.filteredRules.length}`);
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading discount rules:', err);
-        this.error = 'Error al cargar las reglas de descuento. Por favor, intente nuevamente.';
+        console.error('❌ Error loading discount rules:', err);
+        console.error('📝 Detalles del error:', {
+          message: err.message,
+          status: err.status,
+          statusText: err.statusText,
+          url: err.url
+        });
+        
+        this.error = `Error al cargar las reglas de descuento: ${err.status} ${err.statusText || err.message}`;
         this.loading = false;
         // Fallback a datos vacíos en caso de error
         this.rules = [];
@@ -465,10 +553,10 @@ export class AdminDiscountListComponent implements OnInit {
   }
 
   filterDiscounts(): void {
-    if (!this.filterStrategy) {
-      this.filteredRules = [...this.rules];
-    } else {
+    if (this.filterStrategy) {
       this.filteredRules = this.rules.filter(r => r.strategy === this.filterStrategy);
+    } else {
+      this.filteredRules = [...this.rules];
     }
   }
 
@@ -520,27 +608,68 @@ export class AdminDiscountListComponent implements OnInit {
   }
 
   createDiscount(): void {
-    console.log('Crear nueva regla de descuento');
+    console.log('➕ Abriendo formulario para crear nueva regla de descuento');
+    this.selectedRule = undefined;
+    this.showFormModal = true;
   }
 
   editRule(rule: DiscountRule): void {
-    console.log('Editar regla:', rule.name);
+    console.log('✏️ Abriendo formulario para editar regla:', rule);
+    this.selectedRule = rule;
+    this.showFormModal = true;
+  }
+
+  onRuleSaved(rule: DiscountRule): void {
+    console.log('💾 Regla guardada:', rule);
+    
+    if (this.selectedRule) {
+      // Actualizar regla existente
+      const index = this.rules.findIndex(r => r.id === rule.id);
+      if (index !== -1) {
+        console.log(`🔄 Actualizando regla en índice ${index}`);
+        this.rules[index] = rule;
+      }
+    } else {
+      // Agregar nueva regla
+      console.log('➕ Agregando nueva regla a la lista');
+      this.rules.push(rule);
+    }
+    
+    this.filterDiscounts();
+    this.updateStrategyCounts();
+    this.showFormModal = false;
+    this.selectedRule = undefined;
+    
+    console.log(`✅ Lista actualizada. Total de reglas: ${this.rules.length}`);
+  }
+
+  onFormCancelled(): void {
+    console.log('❌ Formulario cancelado');
+    this.showFormModal = false;
+    this.selectedRule = undefined;
   }
 
   deleteRule(rule: DiscountRule): void {
+    console.log('🗑️ Solicitando eliminar regla:', rule);
+    
     if (confirm(`¿Está seguro de eliminar la regla "${rule.name}"?`)) {
+      console.log('✅ Confirmación recibida, procediendo a eliminar...');
+      
       this.discountService.delete(rule.id).subscribe({
         next: () => {
+          console.log('✅ Regla eliminada exitosamente');
           this.rules = this.rules.filter(r => r.id !== rule.id);
           this.filterDiscounts();
           this.updateStrategyCounts();
-          console.log('Rule deleted:', rule.name);
+          console.log(`📊 Reglas restantes: ${this.rules.length}`);
         },
         error: (err) => {
-          console.error('Error deleting rule:', err);
+          console.error('❌ Error deleting rule:', err);
           alert('Error al eliminar la regla. Por favor, intente nuevamente.');
         }
       });
+    } else {
+      console.log('❌ Eliminación cancelada por el usuario');
     }
   }
 }

@@ -4,8 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HasRoleDirective } from '../auth/directives/has-role.directive';
 import { AuthFacade } from '../auth/services/auth.facade';
-import { AdminOrderFacade } from './orders/admin-order.facade';
-import { Subject, interval, takeUntil } from 'rxjs';
+import { NotificationService } from '../../core/services/notification.service';
+import { Notification } from '../../core/models/notification.model';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-admin-layout',
@@ -15,10 +16,10 @@ import { Subject, interval, takeUntil } from 'rxjs';
   styleUrls: ['./admin-layout.component.scss'],
 })
 export class AdminLayoutComponent implements OnInit, OnDestroy {
-  private router = inject(Router);
-  private authFacade = inject(AuthFacade);
-  private orderFacade = inject(AdminOrderFacade);
-  private destroy$ = new Subject<void>();
+  private readonly router = inject(Router);
+  private readonly authFacade = inject(AuthFacade);
+  private readonly notificationService = inject(NotificationService);
+  private readonly destroy$ = new Subject<void>();
   
   searchTerm = '';
   showUserDropdown = false;
@@ -26,77 +27,146 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   messageCount = 0;
   showNotifications = false;
   showMessages = false;
+  isConnected = false;
   
-  notifications: Array<{id: string; message: string; time: Date; read: boolean}> = [];
+  notifications: Notification[] = [];
   messages: Array<{id: string; sender: string; preview: string; time: Date; read: boolean}> = [];
 
   ngOnInit(): void {
-    // Polling cada 30 segundos para verificar nuevos pedidos
-    interval(30000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.checkNewOrders();
-      });
+    // Inicializar conexión WebSocket
+    this.initializeNotifications();
     
-    // Cargar notificaciones iniciales
-    this.loadNotifications();
+    // Suscribirse a las notificaciones en tiempo real
+    this.subscribeToNotifications();
+    
+    // Suscribirse al contador de no leídas
+    this.subscribeToUnreadCount();
+    
+    // Monitorear estado de conexión
+    this.monitorConnectionStatus();
+    
+    // Cargar notificaciones históricas desde el backend
+    this.loadHistoricalNotifications();
+    
+    // Simulación de mensajes (puedes integrar con un servicio real)
+    this.loadMessages();
   }
 
   ngOnDestroy(): void {
+    // Desconectar WebSocket
+    this.notificationService.disconnect();
+    
+    // Limpiar suscripciones
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  checkNewOrders(): void {
-    this.orderFacade.loadOrders();
-    this.orderFacade.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
-      const orders = Array.isArray(state.orders) ? state.orders : [];
-      const pendingOrders = orders.filter((o: any) => o.status === 'PENDING');
-      if (pendingOrders.length > this.notificationCount) {
-        // Hay nuevos pedidos
-        const newOrders = pendingOrders.slice(this.notificationCount);
-        newOrders.forEach((order: any) => {
-          this.addNotification({
-            id: order.id,
-            message: `Nuevo pedido #${String(order.id).slice(-8)} por $${order.totalAfterDiscount?.toFixed ? order.totalAfterDiscount.toFixed(2) : order.totalAfterDiscount}`,
-            time: new Date(),
-            read: false
-          });
-        });
+  /**
+   * Inicializa la conexión WebSocket para notificaciones
+   */
+  private initializeNotifications(): void {
+    console.log('[AdminLayoutComponent] Inicializando sistema de notificaciones...');
+    this.notificationService.connect();
+  }
+
+  /**
+   * Suscribe al stream de notificaciones en tiempo real
+   */
+  private subscribeToNotifications(): void {
+    this.notificationService.notifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (notifications) => {
+          console.log('[AdminLayoutComponent] Notificaciones actualizadas:', notifications.length);
+          this.notifications = notifications;
+        },
+        error: (error) => {
+          console.error('[AdminLayoutComponent] Error en stream de notificaciones:', error);
+        }
+      });
+  }
+
+  /**
+   * Suscribe al contador de notificaciones no leídas
+   */
+  private subscribeToUnreadCount(): void {
+    this.notificationService.unreadCount$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (count) => {
+          console.log('[AdminLayoutComponent] Contador de no leídas:', count);
+          this.notificationCount = count;
+        },
+        error: (error) => {
+          console.error('[AdminLayoutComponent] Error en contador:', error);
+        }
+      });
+  }
+
+  /**
+   * Monitorea el estado de la conexión WebSocket
+   */
+  private monitorConnectionStatus(): void {
+    this.notificationService.connectionStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (isConnected) => {
+          console.log('[AdminLayoutComponent] Estado de conexión:', isConnected ? 'Conectado' : 'Desconectado');
+          this.isConnected = isConnected;
+          
+          if (!isConnected) {
+            console.warn('[AdminLayoutComponent] WebSocket desconectado. Reintentando...');
+          }
+        },
+        error: (error) => {
+          console.error('[AdminLayoutComponent] Error al monitorear conexión:', error);
+        }
+      });
+  }
+
+  /**
+   * Carga las notificaciones históricas desde el backend
+   * Esto asegura la persistencia de notificaciones al refrescar
+   */
+  private loadHistoricalNotifications(): void {
+    this.notificationService.loadNotifications({ 
+      page: 0, 
+      size: 20,
+      read: false  // Solo cargar las no leídas
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response) => {
+        console.log(`[AdminLayoutComponent] Notificaciones históricas cargadas: ${response.totalElements} total`);
+      },
+      error: (error) => {
+        console.error('[AdminLayoutComponent] Error al cargar notificaciones históricas:', error);
+        // En caso de error, continuar con el sistema de notificaciones en tiempo real
       }
-      this.notificationCount = pendingOrders.length;
     });
   }
 
-  loadNotifications(): void {
-    this.orderFacade.loadOrders();
-    this.orderFacade.state$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
-      const orders = Array.isArray(state.orders) ? state.orders : [];
-      const pendingOrders = orders.filter((o: any) => o.status === 'PENDING').slice(0, 5);
-      this.notifications = pendingOrders.map((order: any) => ({
-        id: order.id,
-        message: `Pedido #${String(order.id).slice(-8)} pendiente - $${order.totalAfterDiscount?.toFixed ? order.totalAfterDiscount.toFixed(2) : order.totalAfterDiscount}`,
-        time: new Date(order.createdAt || Date.now()),
-        read: false
-      }));
-      this.notificationCount = this.notifications.filter(n => !n.read).length;
-    });
-    
-    // Simulación de mensajes (puedes integrar con un servicio real)
+  /**
+   * Carga los mensajes (simulación - integrar con servicio real)
+   */
+  private loadMessages(): void {
     this.messages = [
-      { id: '1', sender: 'Cliente: Juan Pérez', preview: 'Consulta sobre producto XYZ', time: new Date(), read: false },
-      { id: '2', sender: 'Soporte: María González', preview: 'Actualización de ticket #123', time: new Date(Date.now() - 3600000), read: false }
+      { 
+        id: '1', 
+        sender: 'Cliente: Juan Pérez', 
+        preview: 'Consulta sobre producto XYZ', 
+        time: new Date(), 
+        read: false 
+      },
+      { 
+        id: '2', 
+        sender: 'Soporte: María González', 
+        preview: 'Actualización de ticket #123', 
+        time: new Date(Date.now() - 3600000), 
+        read: false 
+      }
     ];
     this.messageCount = this.messages.filter(m => !m.read).length;
-  }
-
-  addNotification(notification: {id: string; message: string; time: Date; read: boolean}): void {
-    this.notifications.unshift(notification);
-    this.notificationCount++;
-    
-    // Reproducir sonido de notificación (opcional)
-    // const audio = new Audio('/assets/sounds/notification.mp3');
-    // audio.play().catch(() => {});
   }
 
   onSearch(): void {
@@ -119,9 +189,28 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.showMessages = false;
     
     if (this.showNotifications) {
-      // Marcar todas como leídas al abrir
-      this.notifications.forEach(n => n.read = true);
-      this.notificationCount = 0;
+      // Marcar todas las notificaciones como leídas
+      this.markAllNotificationsAsRead();
+    }
+  }
+
+  /**
+   * Marca todas las notificaciones como leídas
+   */
+  private markAllNotificationsAsRead(): void {
+    if (this.notificationCount > 0) {
+      this.notificationService.markAllAsRead()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            console.log('[AdminLayoutComponent] Todas las notificaciones marcadas como leídas');
+          },
+          error: (error) => {
+            console.error('[AdminLayoutComponent] Error al marcar notificaciones como leídas:', error);
+            // En caso de error, marcar localmente
+            this.notificationCount = 0;
+          }
+        });
     }
   }
 
@@ -137,13 +226,73 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-  goToOrder(orderId: string): void {
+  /**
+   * Navega al detalle de un pedido desde una notificación
+   */
+  goToOrder(notification: Notification): void {
     this.showNotifications = false;
-    this.router.navigate(['/admin/orders'], { queryParams: { orderId } });
+    
+    if (notification.orderId) {
+      // Marcar como leída antes de navegar
+      this.notificationService.markAsRead(notification.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            console.log(`[AdminLayoutComponent] Notificación ${notification.id} marcada como leída`);
+          },
+          error: (error) => {
+            console.error('[AdminLayoutComponent] Error al marcar notificación:', error);
+          }
+        });
+      
+      // Navegar al detalle del pedido
+      this.router.navigate(['/admin/orders'], { 
+        queryParams: { orderId: notification.orderId } 
+      });
+    }
+  }
+
+  /**
+   * Elimina una notificación
+   */
+  deleteNotification(notification: Notification, event: Event): void {
+    event.stopPropagation();
+    
+    this.notificationService.deleteNotification(notification.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log(`[AdminLayoutComponent] Notificación ${notification.id} eliminada`);
+        },
+        error: (error) => {
+          console.error('[AdminLayoutComponent] Error al eliminar notificación:', error);
+        }
+      });
+  }
+
+  /**
+   * Formatea el tiempo de la notificación de manera legible
+   */
+  formatNotificationTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - new Date(date).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Ahora';
+    if (minutes < 60) return `Hace ${minutes} min`;
+    if (hours < 24) return `Hace ${hours} h`;
+    return `Hace ${days} días`;
   }
 
   onLogout(): void {
     this.showUserDropdown = false;
+    
+    // Desconectar notificaciones antes de cerrar sesión
+    this.notificationService.disconnect();
+    
+    // Cerrar sesión
     this.authFacade.logout();
   }
 }

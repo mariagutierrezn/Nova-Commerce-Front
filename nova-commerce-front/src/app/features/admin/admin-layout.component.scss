@@ -299,6 +299,28 @@
     justify-content: center;
   }
 
+  // Indicador de conexión WebSocket
+  &__connection-status {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--admin-sidebar);
+    z-index: 10;
+    
+    &.connected {
+      background: #10b981; // Verde para conectado
+      animation: pulse 2s infinite;
+    }
+    
+    &.disconnected {
+      background: #ef4444; // Rojo para desconectado
+      animation: blink 1s infinite;
+    }
+  }
+
   &__user-container {
     position: relative;
   }
@@ -639,4 +661,72 @@
     font-size: var(--text-xs);
     color: var(--admin-text-muted);
   }
+
+  // Estilos adicionales para notificaciones mejoradas
+  &__notification-title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--admin-text-primary);
+    margin-bottom: 2px;
+  }
+
+  &__notification-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--admin-text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: all var(--transition-base);
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+  }
+
+  &__notification-item {
+    position: relative;
+    
+    &:hover &__notification-delete {
+      opacity: 1;
+    }
+    
+    &.priority-high {
+      border-left: 3px solid #f59e0b; // Naranja
+    }
+    
+    &.priority-urgent {
+      border-left: 3px solid var(--danger); // Rojo
+      background: rgba(239, 68, 68, 0.05);
+    }
+  }
 }
+
+// Animaciones
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
